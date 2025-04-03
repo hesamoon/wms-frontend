@@ -7,7 +7,11 @@ import Loader from "../components/modules/Loader.jsx";
 import DropDownList from "../components/DropDownList.jsx";
 
 // services
-import { getProducts, updateProduct } from "../services/admin.js";
+import {
+  getProducts,
+  updateProduct,
+  removeProduct,
+} from "../services/admin.js";
 
 // utilities
 import { sp } from "../utils/numbers";
@@ -38,6 +42,19 @@ function UpdateProduct() {
         console.log(err);
       },
     });
+  const { mutate: removeProductMutate, isPending: removeProductPending } =
+    useMutation({
+      mutationFn: removeProduct,
+      onSuccess: (data) => {
+        console.log(data);
+        setCurrProduct(null);
+        queryClient.invalidateQueries("products");
+        toast.success(`محصول با شناسه ${data.data.product_code} حذف گردید.`);
+      },
+      onError: (err) => {
+        console.log(err);
+      },
+    });
 
   const [currProduct, setCurrProduct] = useState(null);
   const [openProductsList, setOpenProductsList] = useState(false);
@@ -53,6 +70,12 @@ function UpdateProduct() {
         phone: userAttr().number,
         user_code: userAttr().user_code,
       },
+    });
+  };
+
+  const removeProductClickHandler = () => {
+    removeProductMutate({
+      ...currProduct,
     });
   };
 
@@ -120,7 +143,8 @@ function UpdateProduct() {
                 <input
                   className="bg-transparent w-full text-secondary border-none outline-none text-start"
                   type="text"
-                  value={currProduct?.product_name}
+                  disabled={!currProduct}
+                  value={currProduct ? currProduct?.product_name : ""}
                   placeholder="نام محصول"
                   onChange={(e) =>
                     setCurrProduct({
@@ -153,6 +177,7 @@ function UpdateProduct() {
                   <div className="w-[0.09rem] h-4 bg-[#5F5F5F]" />
                   <button
                     className="text-secondary text-sm"
+                    disabled={!currProduct}
                     onClick={() =>
                       setCurrProduct({
                         ...currProduct,
@@ -180,7 +205,8 @@ function UpdateProduct() {
                 <input
                   className="bg-transparent border-none text-secondary outline-none text-start remove-arrow"
                   type="number"
-                  value={currProduct?.buy_price}
+                  disabled={!currProduct}
+                  value={currProduct ? currProduct?.buy_price : ""}
                   placeholder={5000}
                   onChange={(e) =>
                     setCurrProduct({
@@ -212,7 +238,8 @@ function UpdateProduct() {
                 <input
                   className="bg-transparent border-none text-secondary outline-none text-start remove-arrow"
                   type="number"
-                  value={currProduct?.sell_price}
+                  disabled={!currProduct}
+                  value={currProduct ? currProduct?.sell_price : ""}
                   placeholder={5500}
                   onChange={(e) =>
                     setCurrProduct({
@@ -231,7 +258,8 @@ function UpdateProduct() {
                 <input
                   className="bg-transparent w-20 text-secondary border-none outline-none text-center"
                   type="number"
-                  value={currProduct?.count}
+                  disabled={!currProduct}
+                  value={currProduct ? currProduct?.count : ""}
                   placeholder={0}
                   onChange={(e) =>
                     e.target.value >= 0
@@ -246,8 +274,18 @@ function UpdateProduct() {
             </div>
           </div>
 
-          {/* add product */}
-          <div className="flex items-center justify-end">
+          {/* update & remove product */}
+          <div className="flex items-center justify-end gap-2">
+            <button
+              className={`bg-warning rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 ${
+                removeProductPending || !currProduct ? "opacity-50" : null
+              }`}
+              disabled={removeProductPending || !currProduct}
+              onClick={removeProductClickHandler}
+            >
+              حذف
+              {removeProductPending && <Loader />}
+            </button>
             <button
               className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 ${
                 updateProductPending || !currProduct ? "opacity-75" : null

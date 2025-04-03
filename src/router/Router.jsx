@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 // pages
 import Profit from "../pages/Profit";
+import Users from "../pages/Users.jsx";
 import PageNotFound from "../pages/404";
 import LoginPage from "../pages/LoginPage";
 import AddProduct from "../pages/AddProduct";
@@ -15,7 +16,7 @@ import SoldProductsPage from "../pages/SoldProductsPage";
 import { userAttr } from "../utils/userAttr.js";
 
 function Router() {
-  console.log(userAttr())
+  console.log(userAttr());
   return (
     <Routes>
       <Route
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/sell-product" element={<SellProduct />} />
       <Route path="/update-product" element={<UpdateProduct />} />
       <Route path="/profit" element={<Profit />} />
+      <Route path="/users" element={<Users />} />
       <Route path="/*" element={<PageNotFound />} />
     </Routes>
   );

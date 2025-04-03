@@ -16,7 +16,9 @@ function DropDownList({
       <div className="relative w-fit" ref={ref}>
         <div
           className="flex items-center justify-between w-72 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
-          onClick={() => setOpenList((prev) => !prev)}
+          onClick={() =>
+            data?.length > 0 ? setOpenList((prev) => !prev) : null
+          }
         >
           <span
             className={`text-sm p-1.5 ${
@@ -27,7 +29,11 @@ function DropDownList({
                 : "text-label_text_alpha10"
             }`}
           >
-            {selected?.product_name ? selected?.product_name : "انتخاب کنید"}
+            {data?.length > 0
+              ? selected?.product_name
+                ? selected?.product_name
+                : "انتخاب کنید"
+              : "کالایی وجود ندارد!"}
           </span>
           <img
             className={`${openList ? "rotate-180" : null}`}
@@ -37,7 +43,7 @@ function DropDownList({
         </div>
 
         {openList && (
-          <div className="absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar">
+          <div className="shadow-md absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar">
             {data?.map((product, index) => (
               <p
                 className={`p-1.5 cursor-pointer flex gap-2 items-center hover:bg-hover_primary text-sm rtl ${
@@ -51,7 +57,9 @@ function DropDownList({
                 onClick={() => clickHandler(product)}
               >
                 {product.product_name}
-                {product.count === 0 && <span className="font-thin text-xs">(موجودی 0)</span>}
+                {product.count === 0 && (
+                  <span className="font-thin text-xs">(موجودی 0)</span>
+                )}
               </p>
             ))}
           </div>
