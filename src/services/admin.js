@@ -10,6 +10,10 @@ const getUsers = () => api.get("/getUsers");
 
 const addUser = (data) => api.post("/addUser", { ...data });
 
+const getBuyers = () => api.get("/getBuyers");
+
+const addBuyer = (data) => api.post("/addBuyer", { ...data });
+
 const updateUser = (data) => api.post("/updateUser", { ...data });
 
 const removeUser = (data) => api.post("/removeUser", { ...data });
@@ -30,11 +34,13 @@ export {
   getProducts,
   getSoldProducts,
   getUser,
+  getBuyers,
   sellProduct,
   createProduct,
   updateProduct,
   removeProduct,
   addUser,
+  addBuyer,
   updateUser,
   removeUser,
 };

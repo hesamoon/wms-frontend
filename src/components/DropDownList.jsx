@@ -52,13 +52,17 @@ function DropDownList({
                   selected?.product_code === product.product_code
                     ? "bg-hover_primary text-primary font-bold"
                     : "text-secondary"
-                } ${product.count === 0 ? "text-warning" : null}`}
+                } ${
+                  product.count <= product.min_count ? "text-warning" : null
+                }`}
                 key={product.product_code}
                 onClick={() => clickHandler(product)}
               >
                 {product.product_name}
-                {product.count === 0 && (
-                  <span className="font-thin text-xs">(موجودی 0)</span>
+                {product.count <= product.min_count && (
+                  <span className="font-thin text-xs">
+                    (موجودی {product.count})
+                  </span>
                 )}
               </p>
             ))}

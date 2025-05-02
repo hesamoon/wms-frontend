@@ -630,4 +630,12 @@ const pageNames = [
   // ) },
 ];
 
-export { products, sellers, soldProducts, pageNames };
+const categories = [
+  { code: "Q120", name: "MicroTik" },
+  { code: "B240", name: "Ubiquiti" },
+  { code: "A123", name: "MicroTik" },
+  { code: "G543", name: "MicroTik" },
+  { code: "V456", name: "MicroTik" },
+];
+
+export { products, sellers, soldProducts, pageNames, categories };

@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-// utils
-import { sp } from "../utils/numbers.js";
+// icons
+import arrowIcon from "../assets/arrow-down.svg";
 
 // services
 import { createProduct } from "../services/admin.js";
@@ -13,9 +13,13 @@ import { createProduct } from "../services/admin.js";
 import Loader from "../components/modules/Loader.jsx";
 
 // utils
+import { sp } from "../utils/numbers.js";
 import { userAttr } from "../utils/userAttr.js";
 
-function AddProduct({ open }) {
+// constant
+import { categories } from "../constant/data.jsx";
+
+function AddProduct() {
   const queryClient = useQueryClient();
 
   // POST
@@ -28,9 +32,12 @@ function AddProduct({ open }) {
         setProduct({
           pCode: "",
           pName: "",
+          pCategory: null,
           pAvailableDate: "",
           pBuyPrice: "",
           pSellPrice: "",
+          pUnit: "",
+          pMinCount: 0,
           pCount: 0,
         });
       },
@@ -44,11 +51,19 @@ function AddProduct({ open }) {
   const [product, setProduct] = useState({
     pCode: "",
     pName: "",
+    pCategory: null,
     pAvailableDate: "",
     pBuyPrice: "",
     pSellPrice: "",
+    pUnit: "",
+    pMinCount: 0,
     pCount: 0,
   });
+
+  const [openCategoriesList, setOpenCategoriesList] = useState(false);
+  const [openUnitsList, setOpenUnitsList] = useState(false);
+  const ref = useRef(null);
+  const ref1 = useRef(null);
 
   function genRandonCode() {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -67,6 +82,9 @@ function AddProduct({ open }) {
       warehouseCode: "IR2025",
       productCode: product.pCode,
       productName: product.pName,
+      productCategory: product.pCategory,
+      productUnit: product.pUnit,
+      minQty: product.pMinCount,
       qty: product.pCount,
       buyPrice: product.pBuyPrice,
       sellPrice: product.pSellPrice,
@@ -79,18 +97,30 @@ function AddProduct({ open }) {
     createProductMutate(newProduct);
   };
 
+  // handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        openCategoriesList && setOpenCategoriesList(false);
+      }
+      if (ref1.current && !ref1.current.contains(event.target)) {
+        openUnitsList && setOpenUnitsList(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside, true);
+    return () => {
+      document.removeEventListener("click", handleClickOutside, true);
+    };
+  }, [openCategoriesList, openUnitsList]);
+
   return (
-    <div
-      className={`flex flex-col gap-6 p-8 ${open ? "pr-64" : "pr-8"} w-full`}
-    >
+    <div className={`flex flex-col gap-6 p-8 w-full`}>
       {/* title */}
-      {!open && (
-        <h2
-          className={`font-bold text-secondary text-2xl transition-transform duration-300 ease-in-out`}
-        >
-          افزودن کالا
-        </h2>
-      )}
+      <h2
+        className={`font-bold text-secondary text-2xl transition-transform duration-300 ease-in-out`}
+      >
+        افزودن کالا
+      </h2>
 
       {/* body */}
       <div className="bg-bg_main rounded-xl p-4 space-y-20">
@@ -119,6 +149,55 @@ function AddProduct({ open }) {
               >
                 تولید خودکار
               </button>
+            </div>
+          </div>
+
+          {/* categories */}
+          <div className="space-y-2">
+            <label className="text-secondary">انتخاب دسته</label>
+            <div className="relative w-fit" ref={ref}>
+              <div
+                className="flex items-center justify-between w-72 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
+                onClick={() => setOpenCategoriesList((prev) => !prev)}
+              >
+                <span
+                  className={`text-sm p-1.5 ${
+                    product.pCategory
+                      ? "text-primary font-bold"
+                      : "text-secondary"
+                  }`}
+                >
+                  {product.pCategory ? product.pCategory.name : "انتخاب کنید"}
+                </span>
+                <img
+                  className={`${openCategoriesList ? "rotate-180" : null}`}
+                  src={arrowIcon}
+                  alt="arrow"
+                />
+              </div>
+
+              {openCategoriesList && (
+                <div className="absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar">
+                  {categories.map((category, index) => (
+                    <p
+                      className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
+                        index === categories.length - 1 ? "rounded-b-lg" : null
+                      } ${
+                        product.pCategory?.code === category.code
+                          ? "bg-hover_primary text-primary font-bold"
+                          : "text-secondary"
+                      }`}
+                      key={category.code}
+                      onClick={() => {
+                        setProduct({ ...product, pCategory: { ...category } });
+                        setOpenCategoriesList(false);
+                      }}
+                    >
+                      {category.name}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -217,21 +296,93 @@ function AddProduct({ open }) {
             </div>
           </div>
 
-          {/* product count */}
-          <div className="space-y-1 w-fit">
-            <label className="text-label_text">تعداد</label>
-            <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
-              <input
-                className="bg-transparent w-20 border-none outline-none text-center text-secondary"
-                type="number"
-                value={product.pCount}
-                placeholder={0}
-                onChange={(e) =>
-                  e.target.value >= 0
-                    ? setProduct({ ...product, pCount: e.target.value })
-                    : null
-                }
-              />
+          {/* unit */}
+          <div className="space-y-2">
+            <label className="text-secondary">واحد شمارش</label>
+            <div className="relative w-fit" ref={ref1}>
+              <div
+                className="flex items-center justify-between w-72 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
+                onClick={() => setOpenUnitsList((prev) => !prev)}
+              >
+                <span
+                  className={`text-sm p-1.5 ${
+                    product.pUnit ? "text-primary font-bold" : "text-secondary"
+                  }`}
+                >
+                  {product.pUnit ? product.pUnit : "انتخاب کنید"}
+                </span>
+                <img
+                  className={`${openUnitsList ? "rotate-180" : null}`}
+                  src={arrowIcon}
+                  alt="arrow"
+                />
+              </div>
+
+              {openUnitsList && (
+                <div className="absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar">
+                  {["عدد", "متر"].map((unit, index) => (
+                    <p
+                      className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
+                        index === categories.length - 1 ? "rounded-b-lg" : null
+                      } ${
+                        product.pUnit === unit
+                          ? "bg-hover_primary text-primary font-bold"
+                          : "text-secondary"
+                      }`}
+                      key={index}
+                      onClick={() => {
+                        setProduct({ ...product, pUnit: unit });
+                        setOpenUnitsList(false);
+                      }}
+                    >
+                      {unit}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* count */}
+          <div className="flex items-center gap-8 w-72">
+            {/* product count */}
+            <div className="space-y-1 w-fit">
+              <label className="text-label_text">
+                {product.pUnit === "متر" ? "متراژ" : "تعداد"}
+              </label>
+              <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                <input
+                  className="bg-transparent w-20 border-none outline-none text-center text-secondary"
+                  type="number"
+                  value={product.pCount}
+                  placeholder={0}
+                  onChange={(e) =>
+                    e.target.value >= 0
+                      ? setProduct({ ...product, pCount: e.target.value })
+                      : null
+                  }
+                />
+              </div>
+            </div>
+
+            {/* product minimum count */}
+            <div className="space-y-1 w-fit">
+              <label className="text-label_text">
+                {product.pUnit === "متر" ? "حداقل متراژ" : "حداقل تعداد"}
+              </label>
+              <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                <input
+                  className="bg-transparent w-20 border-none outline-none text-center text-secondary"
+                  type="number"
+                  value={product.pMinCount}
+                  placeholder={0}
+                  onChange={(e) =>
+                    e.target.value >= 0
+                      ? setProduct({ ...product, pMinCount: e.target.value })
+                      : null
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
