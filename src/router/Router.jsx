@@ -16,7 +16,6 @@ import SoldProductsPage from "../pages/SoldProductsPage";
 import { userAttr } from "../utils/userAttr.js";
 
 function Router() {
-  console.log(userAttr());
   return (
     <Routes>
       <Route

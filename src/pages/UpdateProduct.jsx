@@ -3,8 +3,9 @@ import toast from "react-hot-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // components
+import RoleBased from "../components/RoleBased.jsx";
 import Loader from "../components/modules/Loader.jsx";
-import DropDownList from "../components/DropDownList.jsx";
+import SelectOption from "../components/SelectOption.jsx";
 
 // services
 import {
@@ -79,11 +80,6 @@ function UpdateProduct() {
     });
   };
 
-  const selectProductHandler = (data) => {
-    setCurrProduct(data);
-    setOpenProductsList(false);
-  };
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (ref.current && !ref.current.contains(event.target)) {
@@ -115,13 +111,11 @@ function UpdateProduct() {
 
         <div className={`bg-bg_main rounded-xl p-4 space-y-10`}>
           {/* products names */}
-          <DropDownList
-            ref={ref}
-            data={productsData?.data}
-            selected={currProduct}
-            openList={openProductsList}
-            setOpenList={setOpenProductsList}
-            clickHandler={selectProductHandler}
+          <SelectOption
+            title="لیست کالاها"
+            options={productsData?.data}
+            selectedOption={currProduct}
+            setSelectedOption={setCurrProduct}
           />
 
           {/* product details */}
@@ -192,31 +186,35 @@ function UpdateProduct() {
             </div>
 
             {/* product buy price */}
-            <div className="space-y-1 w-72">
-              <div className="flex items-center justify-between">
-                <label className="text-label_text">قیمت خرید</label>
-                {currProduct?.buy_price && (
-                  <span className="text-sm font-bold text-secondary">
-                    {sp(currProduct?.buy_price)} تومان
-                  </span>
-                )}
+            <RoleBased>
+              <div className="space-y-1 w-72">
+                <div className="flex items-center justify-between">
+                  <label className="text-label_text">قیمت خرید</label>
+                  {currProduct?.buy_price && (
+                    <span className="text-sm font-bold text-secondary">
+                      {`${sp(currProduct?.buy_price)} ${
+                        currProduct.price_unit
+                      }`}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                  <input
+                    className="bg-transparent border-none text-secondary outline-none text-start remove-arrow"
+                    type="number"
+                    disabled={!currProduct}
+                    value={currProduct ? currProduct?.buy_price : ""}
+                    placeholder={5000}
+                    onChange={(e) =>
+                      setCurrProduct({
+                        ...currProduct,
+                        buy_price: e.target.value,
+                      })
+                    }
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
-                <input
-                  className="bg-transparent border-none text-secondary outline-none text-start remove-arrow"
-                  type="number"
-                  disabled={!currProduct}
-                  value={currProduct ? currProduct?.buy_price : ""}
-                  placeholder={5000}
-                  onChange={(e) =>
-                    setCurrProduct({
-                      ...currProduct,
-                      buy_price: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
+            </RoleBased>
 
             {/* product sell price */}
             <div className="space-y-1 w-72">
@@ -230,7 +228,7 @@ function UpdateProduct() {
                         : "text-warning"
                     }`}
                   >
-                    {sp(currProduct?.sell_price)} تومان
+                    {`${sp(currProduct?.sell_price)} ${currProduct.price_unit}`}
                   </span>
                 )}
               </div>
@@ -286,6 +284,7 @@ function UpdateProduct() {
               حذف
               {removeProductPending && <Loader />}
             </button>
+
             <button
               className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 ${
                 updateProductPending || !currProduct ? "opacity-75" : null

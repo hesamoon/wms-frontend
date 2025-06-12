@@ -8,6 +8,7 @@ import { sp } from "../utils/numbers.js";
 import { userAttr } from "../utils/userAttr.js";
 
 // components
+import RoleBased from "../components/RoleBased.jsx";
 import SelectOption from "../components/SelectOption.jsx";
 // modules
 import Loader from "../components/modules/Loader.jsx";
@@ -180,7 +181,7 @@ function SellProduct() {
               </div>
 
               {/* product buy price */}
-              {userAttr().role === "ADMIN" && (
+              <RoleBased>
                 <div className="space-y-1 w-72">
                   <label className="text-label_text">قیمت خرید</label>
                   <h3
@@ -191,11 +192,13 @@ function SellProduct() {
                     }`}
                   >
                     {currProduct?.buy_price
-                      ? `${sp(currProduct?.buy_price)} تومان`
+                      ? `${sp(currProduct?.buy_price)} ${
+                          currProduct.price_unit
+                        }`
                       : "محصول خود را انتخاب نمایید"}
                   </h3>
                 </div>
-              )}
+              </RoleBased>
 
               {/* product sell price */}
               <div className="space-y-1 w-72">
@@ -208,7 +211,7 @@ function SellProduct() {
                   }`}
                 >
                   {currProduct?.sell_price
-                    ? `${sp(currProduct?.sell_price)} تومان`
+                    ? `${sp(currProduct?.sell_price)} ${currProduct.price_unit}`
                     : "محصول خود را انتخاب نمایید"}
                 </h3>
               </div>
@@ -458,7 +461,7 @@ function SellProduct() {
                 <label className="text-label_text">مبلغ تخفیف</label>
                 {discountPrice > 0 && (
                   <span className="text-sm font-bold text-confirm">
-                    {sp(discountPrice)} تومان
+                    {sp(discountPrice)} {currProduct.price_unit}
                   </span>
                 )}
               </div>
@@ -502,9 +505,9 @@ function SellProduct() {
             <div className="bg-bg_input p-2 rounded-lg">
               <h3 className="min-w-20 text-center">
                 {infoToSell.count * currProduct?.sell_price - discountPrice
-                  ? sp(
+                  ? `${sp(
                       infoToSell.count * currProduct?.sell_price - discountPrice
-                    )
+                    )} ${currProduct.price_unit}`
                   : 0}
               </h3>
             </div>

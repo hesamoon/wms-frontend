@@ -2,12 +2,19 @@
 // utils
 import { sp } from "../utils/numbers";
 
+// components
+import RoleBased from "./RoleBased";
+
 function DataTable({ data, isSellList = false, setEditProduct }) {
   return (
     <table className="w-full relative rtl">
       <thead className="shadow-md shadow-hover_primary sticky top-0 bg-bg_main">
         <tr>
           <th className="w-[0px] text-secondary py-2 px-6 text-start">ردیف</th>
+          <RoleBased>
+            <th className="text-secondary py-2 px-6 text-start">کد انبار</th>
+          </RoleBased>
+          <th className="text-secondary py-2 px-6 text-start">دسته کالا</th>
           <th className="text-secondary py-2 px-6 text-start">کد کالا</th>
           <th className="text-secondary py-2 px-6 text-start">نام کالا</th>
           <th className="text-secondary py-2 px-6 text-start">تعداد</th>
@@ -21,7 +28,11 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
             <th className="text-secondary py-2 px-6 text-start">مبلغ کل</th>
           ) : (
             <>
-              <th className="text-secondary py-2 px-6 text-start">قیمت خرید</th>
+              <RoleBased>
+                <th className="text-secondary py-2 px-6 text-start">
+                  قیمت خرید
+                </th>
+              </RoleBased>
               <th className="text-secondary py-2 px-6 text-start">قیمت فروش</th>
             </>
           )}
@@ -47,6 +58,14 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
                 className={`text-secondary font-semibold text-center py-2 px-6`}
               >
                 {index + 1}
+              </td>
+              <RoleBased>
+                <td className={`text-secondary font-semibold py-2 px-6`}>
+                  {p.warehouse_code}
+                </td>
+              </RoleBased>
+              <td className={`text-secondary font-semibold py-2 px-6`}>
+                {p.product_category?.name}
               </td>
               <td
                 className={`${
@@ -85,15 +104,21 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
               )}
               {isSellList ? (
                 <td className={`text-secondary font-semibold py-2 px-6`}>
-                  {sp(p.count * p.sell_price - p.paymentDetails.discountPrice)}
+                  {sp(p.count * p.sell_price - p.paymentDetails?.discountPrice)}
+                  <span className="text-xs pr-1">{p.price_unit}</span>
                 </td>
               ) : (
                 <>
-                  <td className={`text-secondary font-semibold py-2 px-6`}>
-                    {sp(p.buy_price)}
-                  </td>
+                  <RoleBased>
+                    <td className={`text-secondary font-semibold py-2 px-6`}>
+                      {sp(p.buy_price)}
+                      <span className="text-xs pr-1">{p.price_unit}</span>
+                    </td>
+                  </RoleBased>
+
                   <td className={`text-secondary font-semibold py-2 px-6`}>
                     {sp(p.sell_price)}
+                    <span className="text-xs pr-1">{p.price_unit}</span>
                   </td>
                 </>
               )}

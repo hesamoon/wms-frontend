@@ -3,6 +3,8 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+// components
+import RoleBased from "../RoleBased";
 // modules
 import Spinner from "../modules/Spinner";
 
@@ -130,9 +132,11 @@ function PaymentDetailsModal({ data, onClose }) {
                   <th className="text-secondary py-2 px-6 text-start">
                     نام کالا
                   </th>
-                  <th className="text-secondary py-2 px-6 text-start">
-                    قیمت خرید
-                  </th>
+                  <RoleBased>
+                    <th className="text-secondary py-2 px-6 text-start">
+                      قیمت خرید
+                    </th>
+                  </RoleBased>
                   <th className="text-secondary py-2 px-6 text-start">
                     قیمت فروش
                   </th>
@@ -145,7 +149,7 @@ function PaymentDetailsModal({ data, onClose }) {
               <tbody>
                 <tr>
                   <td className={`text-secondary font-semibold py-2 px-6`}>
-                    {data.product_category}
+                    {data.product_category?.name}
                   </td>
                   <td className={`text-secondary font-semibold py-2 px-6`}>
                     {data.product_code}
@@ -153,11 +157,15 @@ function PaymentDetailsModal({ data, onClose }) {
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
                     {data.product_name}
                   </td>
-                  <td className={`text-secondary font-semibold py-2 px-6`}>
-                    {sp(data.buy_price)}
-                  </td>
+                  <RoleBased>
+                    <td className={`text-secondary font-semibold py-2 px-6`}>
+                      {sp(data.buy_price)}
+                      <span className="text-xs pr-1">{data.price_unit}</span>
+                    </td>
+                  </RoleBased>
                   <td className={`text-secondary font-semibold py-2 px-6`}>
                     {sp(data.sell_price)}
+                    <span className="text-xs pr-1">{data.price_unit}</span>
                   </td>
                   <td
                     className={`font-semibold py-2 px-6 text-secondary text-center`}
@@ -210,13 +218,15 @@ function PaymentDetailsModal({ data, onClose }) {
                     {data.paymentDetails.confirmerCode}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {sp(data.paymentDetails.discountPrice)} تومان
+                    {sp(data.paymentDetails.discountPrice)}
+                    <span className="text-xs pr-1">{data.price_unit}</span>
                   </td>
                   <td className={`text-secondary font-semibold py-2 px-6`}>
                     {sp(
                       data.count * data.sell_price -
                         data.paymentDetails.discountPrice
                     )}
+                    <span className="text-xs pr-1">{data.price_unit}</span>
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
                     {data.paymentDetails.settlement === "بلی" ? (

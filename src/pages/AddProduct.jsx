@@ -87,6 +87,7 @@ function AddProduct() {
       productName: product.pName,
       productCategory: product.pCategory,
       productUnit: product.pUnit,
+      priceUnit: product.priceUnit.name,
       minQty: product.pMinCount,
       qty: product.pCount,
       buyPrice: product.pBuyPrice,

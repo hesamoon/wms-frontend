@@ -9,6 +9,7 @@ import { AdapterDateFnsJalali } from "@mui/x-date-pickers/AdapterDateFnsJalaliV3
 
 // components
 import DataTable from "../components/DataTable";
+import RoleBased from "../components/RoleBased";
 import PaymentDetailsModal from "../components/modals/PaymentDetailsModal";
 
 // icons
@@ -153,6 +154,7 @@ function SoldProductsPage() {
   }, [showPaymentDetails]);
 
   console.log(editSoldProduct);
+  console.log(soldProducts);
 
   return (
     <>
@@ -170,7 +172,7 @@ function SoldProductsPage() {
           )}
           <div className="flex justify-between items-center">
             {/* sellers names */}
-            {userAttr().role === "ADMIN" && (
+            <RoleBased>
               <div className="relative" ref={ref}>
                 <div
                   className="flex items-center justify-between w-36 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
@@ -220,7 +222,7 @@ function SoldProductsPage() {
                   </div>
                 )}
               </div>
-            )}
+            </RoleBased>
 
             {/* date */}
             <div className="flex items-center gap-2">
