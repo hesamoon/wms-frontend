@@ -22,6 +22,9 @@ const createProduct = (data) => api.post("/createProduct", { ...data });
 
 const updateProduct = (data) => api.post("/updateProduct", { ...data });
 
+const updatePaymentDetails = (data) =>
+  api.post("/updatePaymentDetails", { ...data });
+
 const removeProduct = (data) => api.post("/removeProduct", { ...data });
 
 const sellProduct = (data) => api.post("/sellProduct", { ...data });
@@ -39,6 +42,7 @@ export {
   createProduct,
   updateProduct,
   removeProduct,
+  updatePaymentDetails,
   addUser,
   addBuyer,
   updateUser,

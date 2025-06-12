@@ -18,6 +18,7 @@ import { userAttr } from "../utils/userAttr.js";
 
 // constant
 import { categories } from "../constant/data.jsx";
+import SelectOption from "../components/SelectOption.jsx";
 
 function AddProduct() {
   const queryClient = useQueryClient();
@@ -39,6 +40,7 @@ function AddProduct() {
           pUnit: "",
           pMinCount: 0,
           pCount: 0,
+          priceUnit: { id: 1, name: "تومان" },
         });
       },
       onError: (err) => {
@@ -58,6 +60,7 @@ function AddProduct() {
     pUnit: "",
     pMinCount: 0,
     pCount: 0,
+    priceUnit: { id: 1, name: "تومان" },
   });
 
   const [openCategoriesList, setOpenCategoriesList] = useState(false);
@@ -177,7 +180,7 @@ function AddProduct() {
               </div>
 
               {openCategoriesList && (
-                <div className="absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar">
+                <div className="z-[999] absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar">
                   {categories.map((category, index) => (
                     <p
                       className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
@@ -244,13 +247,28 @@ function AddProduct() {
             </div>
           </div> */}
 
+          {/* price unit */}
+          <SelectOption
+            title="واحد پول"
+            options={[
+              { id: 1, name: "تومان" },
+              { id: 2, name: "درهم" },
+              { id: 3, name: "دلار" },
+            ]}
+            selectedOption={product.priceUnit}
+            setSelectedOption={(option) =>
+              setProduct({ ...product, priceUnit: option })
+            }
+            removeUnSelectedOption={true}
+          />
+
           {/* product buy price */}
           <div className="space-y-1 w-72">
             <div className="flex items-center justify-between">
               <label className="text-label_text">قیمت خرید</label>
               {product.pBuyPrice && (
                 <span className="text-sm font-bold text-secondary">
-                  {sp(product.pBuyPrice)} تومان
+                  {sp(product.pBuyPrice)} {product.priceUnit.name}
                 </span>
               )}
             </div>
@@ -279,7 +297,7 @@ function AddProduct() {
                       : "text-warning"
                   }`}
                 >
-                  {sp(product.pSellPrice)} تومان
+                  {sp(product.pSellPrice)} {product.priceUnit.name}
                 </span>
               )}
             </div>

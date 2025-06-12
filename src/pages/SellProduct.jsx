@@ -49,6 +49,11 @@ function SellProduct() {
           sellPrice: "",
           count: "",
         });
+        setPayMethod(null);
+        setConfirmerCode(null);
+        setDesc("");
+        setDiscountPrice("");
+        setSettlement("خیر");
         setNewUser(null);
         setSelectedCustomer(null);
       },
@@ -66,8 +71,13 @@ function SellProduct() {
     },
   });
 
-  const [currProduct, setCurrProduct] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [currProduct, setCurrProduct] = useState(null);
+  const [payMethod, setPayMethod] = useState(null);
+  const [confirmerCode, setConfirmerCode] = useState(null);
+  const [desc, setDesc] = useState("");
+  const [discountPrice, setDiscountPrice] = useState("");
+  const [settlement, setSettlement] = useState("خیر");
   const [infoToSell, setInfoToSell] = useState({
     sellPrice: "",
     count: "",
@@ -90,6 +100,13 @@ function SellProduct() {
         type: selectedCustomer ? selectedCustomer.type : newUser?.type,
       },
       count: `${infoToSell.count}`,
+      paymentDetails: {
+        payMethod: payMethod ? payMethod.name : "",
+        confirmerCode: confirmerCode ? confirmerCode : "",
+        settlement: settlement,
+        desc: desc,
+        discountPrice: discountPrice,
+      },
     });
   };
 
@@ -110,9 +127,9 @@ function SellProduct() {
       </h2>
 
       {/* body */}
-      <div className="bg-bg_main rounded-xl p-4 space-y-10 ">
-        <div className="flex gap-20">
-          {/* right side */}
+      <div className="bg-bg_main rounded-xl p-4 px-8 space-y-10 ">
+        <div className="flex gap-4 justify-between">
+          {/* product info */}
           <div className="space-y-10">
             {/* products names */}
             {productsLoading ? (
@@ -341,6 +358,121 @@ function SellProduct() {
               </button>
             ) : null}
           </div>
+
+          {/* payments details */}
+          <div className="space-y-4">
+            <label className="text-secondary">اطلاعات پرداخت</label>
+
+            {/* payment method */}
+            <SelectOption
+              title="نوع پرداخت"
+              options={[
+                { id: 1, name: "انتقال به کارت" },
+                { id: 2, name: "پوز" },
+                { id: 3, name: "نقد" },
+              ]}
+              selectedOption={payMethod}
+              setSelectedOption={setPayMethod}
+            />
+
+            {/* payment confirmer */}
+            {payMethod && payMethod?.name !== "نقد" ? (
+              <div className="space-y-1 w-72">
+                <label className="text-label_text">
+                  {payMethod.name === "انتقال به کارت"
+                    ? "شماره پیگیری"
+                    : "4 رقم آخر کارت"}
+                </label>
+                <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                  <input
+                    className="bg-transparent w-full border-none outline-none text-start remove-arrow"
+                    type="number"
+                    value={confirmerCode ? confirmerCode : ""}
+                    placeholder={
+                      payMethod.name === "انتقال به کارت"
+                        ? "123456789123"
+                        : "1234"
+                    }
+                    onChange={(e) =>
+                      payMethod.name === "انتقال به کارت"
+                        ? e.target.value.length <= 12
+                          ? setConfirmerCode(e.target.value)
+                          : null
+                        : e.target.value.length <= 4
+                        ? setConfirmerCode(e.target.value)
+                        : null
+                    }
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {/* has full payment been made? */}
+            <div className="space-y-1 w-72">
+              <label className="text-label_text">
+                خریدار تسویه حساب کرده است؟
+              </label>
+              <div className="flex items-center justify-evenly bg-bg_input py-2 px-4 rounded-lg">
+                <div className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="type"
+                    value="بلی"
+                    onClick={() => setSettlement("بلی")}
+                    checked={settlement === "بلی"}
+                  />
+                  <label>بلی</label>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="type"
+                    value="خیر"
+                    onClick={() => setSettlement("خیر")}
+                    checked={settlement === "خیر"}
+                  />
+                  <label>خیر</label>
+                </div>
+              </div>
+            </div>
+
+            {/* description */}
+            {settlement === "خیر" && (
+              <div className="space-y-1 w-72">
+                <label className="text-label_text">توضیحات روند پرداخت</label>
+                <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                  <textarea
+                    className="bg-transparent w-full border-none outline-none text-start text-sm remove-arrow"
+                    value={desc}
+                    placeholder="پرداخت 1..."
+                    onChange={(e) => setDesc(e.target.value)}
+                  ></textarea>
+                </div>
+              </div>
+            )}
+
+            {/* discount */}
+            <div className="space-y-1 w-72">
+              <div className="flex items-center justify-between">
+                <label className="text-label_text">مبلغ تخفیف</label>
+                {discountPrice > 0 && (
+                  <span className="text-sm font-bold text-confirm">
+                    {sp(discountPrice)} تومان
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                <input
+                  className="bg-transparent border-none text-secondary outline-none text-start remove-arrow"
+                  type="number"
+                  value={discountPrice}
+                  placeholder={100000}
+                  onChange={(e) => setDiscountPrice(+e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* sell product */}
@@ -364,18 +496,34 @@ function SellProduct() {
             </div>
           </div>
 
+          {/* product count */}
+          <div className="flex items-center gap-2 w-fit">
+            <label className="text-label_text">مبلغ قابل پرداخت</label>
+            <div className="bg-bg_input p-2 rounded-lg">
+              <h3 className="min-w-20 text-center">
+                {infoToSell.count * currProduct?.sell_price - discountPrice
+                  ? sp(
+                      infoToSell.count * currProduct?.sell_price - discountPrice
+                    )
+                  : 0}
+              </h3>
+            </div>
+          </div>
+
           <button
             className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 ${
               sellProductPending ||
               !currProduct ||
-              (!newUser && !selectedCustomer)
+              (!newUser && !selectedCustomer) ||
+              !payMethod
                 ? "opacity-75"
                 : null
             }`}
             disabled={
               sellProductPending ||
               !currProduct ||
-              (!newUser && !selectedCustomer)
+              (!newUser && !selectedCustomer) ||
+              !payMethod
             }
             onClick={sellClickHandler}
           >

@@ -10,6 +10,7 @@ export default {
         bg_main: "#f5f8fe",
         
         hover_primary: "#318dc11F",
+        hov_secondry: "#55768b1F",
 
         label_text: "#55768b",
         label_text_alpha10: "#55768ba1",

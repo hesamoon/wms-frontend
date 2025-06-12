@@ -4,7 +4,13 @@ import { useEffect, useRef, useState } from "react";
 // icons
 import arrowIcon from "../assets/arrow-down.svg";
 
-function SelectOption({ title, options, selectedOption, setSelectedOption }) {
+function SelectOption({
+  title,
+  options,
+  selectedOption,
+  setSelectedOption,
+  removeUnSelectedOption = false,
+}) {
   const [openOption, setOpenOption] = useState(false);
   const ref = useRef();
 
@@ -40,7 +46,9 @@ function SelectOption({ title, options, selectedOption, setSelectedOption }) {
             }`}
           >
             {selectedOption
-              ? title === "مشتریان"
+              ? title === "مشتریان" ||
+                title === "نوع پرداخت" ||
+                title === "واحد پول"
                 ? selectedOption.name
                 : selectedOption.product_name
               : "انتخاب کنید"}
@@ -54,27 +62,43 @@ function SelectOption({ title, options, selectedOption, setSelectedOption }) {
 
         {openOption && (
           <div className="absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar shadow-lg z-[999]">
-            <p
-              className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl rounded-t-lg text-secondary opacity-75`}
-              onClick={() => optionClickHandler(null)}
-            >
-              انتخاب کنید
-            </p>
+            {!removeUnSelectedOption && (
+              <p
+                className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl rounded-t-lg text-secondary opacity-75`}
+                onClick={() => optionClickHandler(null)}
+              >
+                انتخاب کنید
+              </p>
+            )}
             {options.map((option, index) => (
               <p
                 className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
                   index === options.length - 1 ? "rounded-b-lg" : null
                 } ${
-                  title === "مشتریان"
+                  title === "مشتریان" ||
+                  title === "نوع پرداخت" ||
+                  title === "واحد پول"
                     ? selectedOption?.id === option?.id
+                      ? "bg-hover_primary text-primary font-bold"
+                      : "text-secondary"
                     : selectedOption?.object_id === option?.object_id
                     ? "bg-hover_primary text-primary font-bold"
                     : "text-secondary"
                 }`}
-                key={title === "مشتریان" ? option?.id : option?.object_id}
+                key={
+                  title === "مشتریان" ||
+                  title === "نوع پرداخت" ||
+                  title === "واحد پول"
+                    ? option?.id
+                    : option?.object_id
+                }
                 onClick={() => optionClickHandler(option)}
               >
-                {title === "مشتریان" ? option?.name : option?.product_name}
+                {title === "مشتریان" ||
+                title === "نوع پرداخت" ||
+                title === "واحد پول"
+                  ? option?.name
+                  : option?.product_name}
               </p>
             ))}
           </div>

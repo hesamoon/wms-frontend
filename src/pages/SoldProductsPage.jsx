@@ -9,6 +9,7 @@ import { AdapterDateFnsJalali } from "@mui/x-date-pickers/AdapterDateFnsJalaliV3
 
 // components
 import DataTable from "../components/DataTable";
+import PaymentDetailsModal from "../components/modals/PaymentDetailsModal";
 
 // icons
 import arrowIcon from "../assets/arrow-down.svg";
@@ -37,6 +38,8 @@ function SoldProductsPage() {
   const [soldProducts, setSoldProducts] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [selSeller, setSelSeller] = useState({ id: "all", name: "همه" });
+  const [editSoldProduct, setEditSoldProduct] = useState(null);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState({
     for: null,
@@ -135,128 +138,160 @@ function SoldProductsPage() {
     };
   }, [openOptions]);
 
+  useEffect(() => {
+    if (editSoldProduct) {
+      setShowPaymentDetails(true);
+    }
+  }, [editSoldProduct]);
+
+  useEffect(() => {
+    const changeScrollBarState = (state) => {
+      document.body.style.overflow = state ? "hidden" : "";
+    };
+
+    changeScrollBarState(showPaymentDetails);
+  }, [showPaymentDetails]);
+
+  console.log(editSoldProduct);
+
   return (
-    <div className={`flex flex-col gap-6 p-8 w-full`}>
-      {/* title */}
-      <h2
-        className={`font-bold text-secondary text-2xl transition-transform duration-300 ease-in-out`}
-      >
-        لیست فروش
-      </h2>
+    <>
+      <div className={`flex flex-col gap-6 p-8 w-full`}>
+        {/* title */}
+        <h2
+          className={`font-bold text-secondary text-2xl transition-transform duration-300 ease-in-out`}
+        >
+          لیست فروش
+        </h2>
 
-      <div className="space-y-2 bg-bg_main rounded-xl p-4">
-        {userAttr().role === "ADMIN" && (
-          <h3 className="font-bold text-lg text-label_text">فروشندگان</h3>
-        )}
-        <div className="flex justify-between items-center">
-          {/* sellers names */}
+        <div className="space-y-2 bg-bg_main rounded-xl p-4">
           {userAttr().role === "ADMIN" && (
-            <div className="relative" ref={ref}>
-              <div
-                className="flex items-center justify-between w-36 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
-                onClick={() => setOpenOptions((prev) => !prev)}
-              >
-                <span className="text-sm text-primary font-bold">
-                  {selSeller.name}
-                </span>
-                <img
-                  className={`${openOptions ? "rotate-180" : null}`}
-                  src={arrowIcon}
-                  alt="arrow"
-                />
-              </div>
-
-              {openOptions && (
-                <div className="absolute z-[999] top-8 bg-bg_input rounded-lg w-36 shadow-md">
-                  <p
-                    className={`p-1 rounded-t-lg cursor-pointer text-sm hover:bg-hover_primary ${
-                      selSeller.id === "all"
-                        ? "bg-hover_primary text-primary font-bold"
-                        : "text-secondary"
-                    }`}
-                    onClick={() =>
-                      selectOptionHandler({ id: "all", name: "همه" })
-                    }
-                  >
-                    همه
-                  </p>
-                  {sellers
-                    .filter((s) => s.user_code !== userAttr().user_code)
-                    .map((seller, index) => (
-                      <p
-                        className={`p-1 cursor-pointer text-sm hover:bg-hover_primary ${
-                          index === sellers.length - 2 ? "rounded-b-lg" : null
-                        } ${
-                          selSeller.user_code === seller.user_code
-                            ? "bg-hover_primary font-bold text-primary"
-                            : "text-secondary"
-                        }`}
-                        key={seller.user_code}
-                        onClick={() => selectOptionHandler(seller)}
-                      >
-                        {seller.name}
-                      </p>
-                    ))}
-                </div>
-              )}
-            </div>
+            <h3 className="font-bold text-lg text-label_text">فروشندگان</h3>
           )}
+          <div className="flex justify-between items-center">
+            {/* sellers names */}
+            {userAttr().role === "ADMIN" && (
+              <div className="relative" ref={ref}>
+                <div
+                  className="flex items-center justify-between w-36 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
+                  onClick={() => setOpenOptions((prev) => !prev)}
+                >
+                  <span className="text-sm text-primary font-bold">
+                    {selSeller.name}
+                  </span>
+                  <img
+                    className={`${openOptions ? "rotate-180" : null}`}
+                    src={arrowIcon}
+                    alt="arrow"
+                  />
+                </div>
 
-          {/* date */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-secondary">از تاریخ</span>
-            {/* from */}
-            <button
-              className="w-48 bg-bg_input py-1 text-secondary outline-none font-bold rounded-lg text-center"
-              onClick={() => setOpenDatePicker({ for: 0, status: true })}
-            >
-              <p>{format(startDate, "yyyy/MM/dd")}</p>
-            </button>
-            <span className="text-sm text-secondary">تا</span>
-            {/* until */}
-            <button
-              className="w-48 bg-bg_input py-1 text-secondary outline-none font-bold rounded-lg text-center"
-              onClick={() => setOpenDatePicker({ for: 1, status: true })}
-            >
-              <p>{format(endDate, "yyyy/MM/dd")}</p>
-            </button>
-            <Dialog
-              open={openDatePicker.status}
-              onClose={() => setOpenDatePicker({ for: null, status: false })}
-            >
-              <DialogTitle>تاریخ مورد نظر را انتخاب کنید:</DialogTitle>
-              <LocalizationProvider dateAdapter={AdapterDateFnsJalali}>
-                <DateCalendar
-                  value={openDatePicker.for === 0 ? startDate : endDate}
-                  onChange={(e) =>
-                    openDatePicker.for === 0 ? setStartDate(e) : setEndDate(e)
-                  }
-                />
-              </LocalizationProvider>
-            </Dialog>
-            <button
-              className="bg-bg_input py-1 px-2 text-secondary rounded-lg text-center"
-              onClick={filterClickHandler}
-            >
-              اعمال تاریخ
-            </button>
+                {openOptions && (
+                  <div className="absolute z-[999] top-8 bg-bg_input rounded-lg w-36 shadow-md">
+                    <p
+                      className={`p-1 rounded-t-lg cursor-pointer text-sm hover:bg-hover_primary ${
+                        selSeller.id === "all"
+                          ? "bg-hover_primary text-primary font-bold"
+                          : "text-secondary"
+                      }`}
+                      onClick={() =>
+                        selectOptionHandler({ id: "all", name: "همه" })
+                      }
+                    >
+                      همه
+                    </p>
+                    {sellers
+                      .filter((s) => s.user_code !== userAttr().user_code)
+                      .map((seller, index) => (
+                        <p
+                          className={`p-1 cursor-pointer text-sm hover:bg-hover_primary ${
+                            index === sellers.length - 2 ? "rounded-b-lg" : null
+                          } ${
+                            selSeller.user_code === seller.user_code
+                              ? "bg-hover_primary font-bold text-primary"
+                              : "text-secondary"
+                          }`}
+                          key={seller.user_code}
+                          onClick={() => selectOptionHandler(seller)}
+                        >
+                          {seller.name}
+                        </p>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* date */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-secondary">از تاریخ</span>
+              {/* from */}
+              <button
+                className="w-48 bg-bg_input py-1 text-secondary outline-none font-bold rounded-lg text-center"
+                onClick={() => setOpenDatePicker({ for: 0, status: true })}
+              >
+                <p>{format(startDate, "yyyy/MM/dd")}</p>
+              </button>
+              <span className="text-sm text-secondary">تا</span>
+              {/* until */}
+              <button
+                className="w-48 bg-bg_input py-1 text-secondary outline-none font-bold rounded-lg text-center"
+                onClick={() => setOpenDatePicker({ for: 1, status: true })}
+              >
+                <p>{format(endDate, "yyyy/MM/dd")}</p>
+              </button>
+              <Dialog
+                open={openDatePicker.status}
+                onClose={() => setOpenDatePicker({ for: null, status: false })}
+              >
+                <DialogTitle>تاریخ مورد نظر را انتخاب کنید:</DialogTitle>
+                <LocalizationProvider dateAdapter={AdapterDateFnsJalali}>
+                  <DateCalendar
+                    value={openDatePicker.for === 0 ? startDate : endDate}
+                    onChange={(e) =>
+                      openDatePicker.for === 0 ? setStartDate(e) : setEndDate(e)
+                    }
+                  />
+                </LocalizationProvider>
+              </Dialog>
+              <button
+                className="bg-bg_input py-1 px-2 text-secondary rounded-lg text-center"
+                onClick={filterClickHandler}
+              >
+                اعمال تاریخ
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* data list */}
+        <div className="bg-bg_main rounded-xl max-h-[25rem] overflow-auto ltr">
+          {soldProductsLoading ? (
+            <Loader />
+          ) : soldProducts.length > 0 ? (
+            <DataTable
+              data={soldProducts}
+              isSellList={true}
+              setEditProduct={setEditSoldProduct}
+            />
+          ) : (
+            <h1 className="text-center text-secondary font-bold py-4">
+              کالای فروخته شده ای موجود نمی باشد.
+            </h1>
+          )}
         </div>
       </div>
 
-      {/* data list */}
-      <div className="bg-bg_main rounded-xl max-h-[25rem] overflow-auto">
-        {soldProductsLoading ? (
-          <Loader />
-        ) : soldProducts.length > 0 ? (
-          <DataTable data={soldProducts} isSellList={true} />
-        ) : (
-          <h1 className="text-center text-secondary font-bold py-4">
-            کالای فروخته شده ای موجود نمی باشد.
-          </h1>
-        )}
-      </div>
-    </div>
+      {showPaymentDetails && (
+        <PaymentDetailsModal
+          data={editSoldProduct}
+          onClose={() => {
+            setEditSoldProduct(null);
+            setShowPaymentDetails(false);
+          }}
+        />
+      )}
+    </>
   );
 }
 
