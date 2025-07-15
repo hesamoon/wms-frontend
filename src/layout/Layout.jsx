@@ -22,40 +22,39 @@ function Layout({ children }) {
       {children}
     </div>
   ) : (
-    <div className="min-h-screen flex flex-col justify-between">
-      <div>
+    <div className="min-h-screen flex flex-col justify-between overflow-x-hidden">
+      <div className="overflow-auto">
         <Header open={open} setOpen={setOpen} />
-        <div className={`flex relative min-h-screen size`}>
+
+        <div className="flex size">
           {/* hamburger menu */}
-          <div className="bg-bg_main min-h-screen transition-transform duration-300 ease-in-out rounded-lg my-2 mr-2">
-            <div className={`sticky top-0 overflow-auto flex flex-col h-fit mr-2`}>
+          <div className="bg-bg_main min-h-screen transition-all duration-300 ease-in-out rounded-lg my-2 mr-2">
+            <div className="flex flex-col h-fit">
               {userAttr().role === "ADMIN"
                 ? pageNames.map((item, index) => (
                     <Link key={index} to={item.path}>
-                      <h2
+                      <div
                         className={`${
                           location.pathname === item.path
                             ? "font-bold text-primary"
                             : "text-secondary"
                         } ${
-                          open ? "pl-20" : "pl-6"
-                        } p-4 cursor-pointer whitespace-nowrap transition duration-300 ease-in-out`}
+                          open ? "pl-12" : null
+                        } py-4 px-6 cursor-pointer whitespace-nowrap flex items-center gap-2 transition-all duration-300 ease-in-out`}
                       >
-                        {open ? (
-                          <div className="flex items-center gap-2">
-                            {/* icon */}
-                            {location.pathname === item.path
-                              ? item.actIcon
-                              : item.inactIcon}
-                            {item.name}
-                          </div>
-                        ) : // icon
-                        location.pathname === item.path ? (
-                          item.actIcon
-                        ) : (
-                          item.inactIcon
-                        )}
-                      </h2>
+                        {/* icon */}
+                        {location.pathname === item.path
+                          ? item.actIcon
+                          : item.inactIcon}
+
+                        <h2
+                          className={`transition-all duration-300 ease-in-out ${
+                            open ? "flex" : "hidden"
+                          }`}
+                        >
+                          {item.name}
+                        </h2>
+                      </div>
                     </Link>
                   ))
                 : pageNames
@@ -95,6 +94,7 @@ function Layout({ children }) {
           {children}
         </div>
       </div>
+      
       <Footer />
     </div>
   );

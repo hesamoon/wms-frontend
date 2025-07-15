@@ -142,7 +142,14 @@ function SellProduct() {
                   (product) => product.count > 0
                 )}
                 selectedOption={currProduct}
-                setSelectedOption={setCurrProduct}
+                setSelectedOption={(option) => {
+                  setCurrProduct(option);
+                  setInfoToSell({
+                    sellPrice: "",
+                    count: "",
+                    buyerInfo: null,
+                  });
+                }}
               />
             )}
 
@@ -230,7 +237,10 @@ function SellProduct() {
                 title="مشتریان"
                 options={buyersData?.data}
                 selectedOption={selectedCustomer}
-                setSelectedOption={setSelectedCustomer}
+                setSelectedOption={(option) => {
+                  setSelectedCustomer(option);
+                  setNewUser(null);
+                }}
               />
             )}
 
@@ -375,7 +385,10 @@ function SellProduct() {
                 { id: 3, name: "نقد" },
               ]}
               selectedOption={payMethod}
-              setSelectedOption={setPayMethod}
+              setSelectedOption={(option) => {
+                setPayMethod(option);
+                setConfirmerCode(null);
+              }}
             />
 
             {/* payment confirmer */}
@@ -419,7 +432,7 @@ function SellProduct() {
                 <div className="flex items-center gap-1">
                   <input
                     type="radio"
-                    name="type"
+                    name="settlement"
                     value="بلی"
                     onClick={() => setSettlement("بلی")}
                     checked={settlement === "بلی"}
@@ -430,7 +443,7 @@ function SellProduct() {
                 <div className="flex items-center gap-1">
                   <input
                     type="radio"
-                    name="type"
+                    name="settlement"
                     value="خیر"
                     onClick={() => setSettlement("خیر")}
                     checked={settlement === "خیر"}
@@ -471,7 +484,11 @@ function SellProduct() {
                   type="number"
                   value={discountPrice}
                   placeholder={100000}
-                  onChange={(e) => setDiscountPrice(+e.target.value)}
+                  onChange={(e) =>
+                    +e.target.value <= currProduct?.sell_price
+                      ? setDiscountPrice(+e.target.value)
+                      : setDiscountPrice(currProduct?.sell_price)
+                  }
                 />
               </div>
             </div>
@@ -499,7 +516,7 @@ function SellProduct() {
             </div>
           </div>
 
-          {/* product count */}
+          {/* total price */}
           <div className="flex items-center gap-2 w-fit">
             <label className="text-label_text">مبلغ قابل پرداخت</label>
             <div className="bg-bg_input p-2 rounded-lg">

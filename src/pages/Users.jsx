@@ -190,7 +190,7 @@ function Users() {
                         ) {
                           setSelectedUser({ op: "u", username: user.number });
                           setUser({ ...user });
-                          setSelRole(user.role)
+                          setSelRole(user.role);
                         } else {
                           setSelectedUser({
                             op: "a",
@@ -203,7 +203,7 @@ function Users() {
                             user_code: "",
                             role: "",
                           });
-                          setSelRole(null)
+                          setSelRole(null);
                         }
                       }}
                     >
@@ -439,9 +439,25 @@ function Users() {
           <div className="flex items-center justify-end">
             <button
               className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 ${
-                addUserPending || updateUserPending ? "opacity-75" : null
+                addUserPending ||
+                updateUserPending ||
+                !user.name ||
+                !user.number ||
+                !user.password ||
+                !user.user_code ||
+                !user.role
+                  ? "opacity-75"
+                  : null
               }`}
-              disabled={addUserPending || updateUserPending}
+              disabled={
+                addUserPending ||
+                updateUserPending ||
+                !user.name ||
+                !user.number ||
+                !user.password ||
+                !user.user_code ||
+                !user.role
+              }
               onClick={opUserClickHandler}
             >
               {selectedUser.op === "a"

@@ -3,10 +3,11 @@ import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 // icons
-import profile from "../assets/03.jpg";
+import profile from "../assets/prof-icon2.png";
 
 // utils
 import { clearCookie } from "../utils/cookie";
+import { userAttr } from "../utils/userAttr";
 
 function Header({ open, setOpen }) {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ function Header({ open, setOpen }) {
     <header className="bg-secondary">
       <header className="flex items-center justify-between pl-8 size">
         {/* profile */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 py-2">
           <div className="flex items-center gap-4 border-none p-2">
             {/* Hamburger Icon */}
             <button
@@ -52,11 +53,15 @@ function Header({ open, setOpen }) {
           </div>
 
           <img
-            className="w-14 rounded-full object-cover cursor-pointer my-2"
+            className="w-14 h-14 rounded-full object-cover cursor-pointer"
             src={profile}
             alt="profile"
             onClick={logOut}
           />
+
+          <h5 className="text-base text-white">
+           {userAttr().name}
+          </h5>
         </div>
 
         {/* logo */}
