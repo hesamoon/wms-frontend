@@ -12,7 +12,7 @@ import Spinner from "../modules/Spinner";
 import { updatePaymentDetails } from "../../services/admin";
 
 // utils
-import { sp } from "../../utils/numbers";
+import { e2p, sp } from "../../utils/numbers";
 
 function PaymentDetailsModal({ data, onClose }) {
   const queryClient = useQueryClient();
@@ -103,7 +103,7 @@ function PaymentDetailsModal({ data, onClose }) {
                     {data.buyer.name}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {data.buyer.number}
+                    {e2p(data.buyer.number)}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
                     {data.buyer.address}
@@ -170,7 +170,7 @@ function PaymentDetailsModal({ data, onClose }) {
                   <td
                     className={`font-semibold py-2 px-6 text-secondary text-center`}
                   >
-                    {data.count}
+                    {sp(data.count)}
                   </td>
                 </tr>
               </tbody>
@@ -215,17 +215,16 @@ function PaymentDetailsModal({ data, onClose }) {
                     {data.paymentDetails.payMethod}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {data.paymentDetails.confirmerCode}
+                    {e2p(data.paymentDetails.confirmerCode)}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
                     {sp(data.paymentDetails.discountPrice)}
-                    <span className="text-xs pr-1">{data.price_unit}</span>
+                    {data.paymentDetails.discountPrice ? (
+                      <span className="text-xs pr-1">{data.price_unit}</span>
+                    ) : null}
                   </td>
                   <td className={`text-secondary font-semibold py-2 px-6`}>
-                    {sp(
-                      data.count * data.sell_price -
-                        data.paymentDetails.discountPrice
-                    )}
+                    {sp(data.sold_price)}
                     <span className="text-xs pr-1">{data.price_unit}</span>
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>

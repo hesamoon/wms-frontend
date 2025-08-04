@@ -82,7 +82,6 @@ function SellProduct() {
   const [infoToSell, setInfoToSell] = useState({
     sellPrice: "",
     count: "",
-    buyerInfo: null,
   });
   const [newUser, setNewUser] = useState(null);
 
@@ -101,6 +100,7 @@ function SellProduct() {
         type: selectedCustomer ? selectedCustomer.type : newUser?.type,
       },
       count: `${infoToSell.count}`,
+      soldPrice: `${infoToSell.sellPrice}`,
       paymentDetails: {
         payMethod: payMethod ? payMethod.name : "",
         confirmerCode: confirmerCode ? confirmerCode : "",
@@ -114,9 +114,13 @@ function SellProduct() {
   useEffect(() => {
     setInfoToSell({
       sellPrice: currProduct?.sell_price,
-      count: currProduct?.count,
+      count: 1,
     });
   }, [currProduct]);
+
+  useEffect(() => {
+    setDiscountPrice(0);
+  }, [infoToSell.count]);
 
   return (
     <div className={`flex flex-col gap-6 p-8 w-full`}>
@@ -478,17 +482,35 @@ function SellProduct() {
                   </span>
                 )}
               </div>
+
               <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
                 <input
                   className="bg-transparent border-none text-secondary outline-none text-start remove-arrow"
                   type="number"
                   value={discountPrice}
                   placeholder={100000}
-                  onChange={(e) =>
-                    +e.target.value <= currProduct?.sell_price
-                      ? setDiscountPrice(+e.target.value)
-                      : setDiscountPrice(currProduct?.sell_price)
-                  }
+                  onChange={(e) => {
+                    const newDiscount = +e.target.value;
+                    const calculatedTotal =
+                      currProduct?.sell_price * infoToSell.count;
+
+                    if (newDiscount <= calculatedTotal) {
+                      setDiscountPrice(newDiscount);
+
+                      // Update total price based on new discount
+                      const newTotalPrice = calculatedTotal - newDiscount;
+                      setInfoToSell({
+                        ...infoToSell,
+                        sellPrice: newTotalPrice,
+                      });
+                    } else {
+                      setDiscountPrice(calculatedTotal);
+                      setInfoToSell({
+                        ...infoToSell,
+                        sellPrice: 0,
+                      });
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -509,7 +531,10 @@ function SellProduct() {
                 placeholder={1}
                 onChange={(e) =>
                   e.target.value >= 1 && e.target.value <= currProduct?.count
-                    ? setInfoToSell({ ...infoToSell, count: e.target.value })
+                    ? setInfoToSell({
+                        sellPrice: e.target.value * currProduct?.sell_price,
+                        count: e.target.value,
+                      })
                     : null
                 }
               />
@@ -519,14 +544,47 @@ function SellProduct() {
           {/* total price */}
           <div className="flex items-center gap-2 w-fit">
             <label className="text-label_text">مبلغ قابل پرداخت</label>
-            <div className="bg-bg_input p-2 rounded-lg">
-              <h3 className="min-w-20 text-center">
-                {infoToSell.count * currProduct?.sell_price - discountPrice
-                  ? `${sp(
-                      infoToSell.count * currProduct?.sell_price - discountPrice
-                    )} ${currProduct.price_unit}`
-                  : 0}
-              </h3>
+            <div className="min-w-20 bg-bg_input p-2 rounded-lg flex items-center gap-2">
+              <input
+                className="text-center border-none outline-none bg-transparent"
+                type="text"
+                disabled={!currProduct?.count}
+                value={
+                  currProduct?.count
+                    ? infoToSell.sellPrice
+                        .toString()
+                        .match(/(\d+?)(?=(\d{3})+(?!\d)|$)/g)
+                        ?.join(",")
+                        .toString()
+                        .replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d])
+                    : ""
+                }
+                placeholder="0"
+                onChange={(e) => {
+                  const numericValue = e.target.value
+                    .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+                    .replace(/[^\d]/g, "");
+
+                  const newTotalPrice = +numericValue;
+                  const calculatedTotal =
+                    currProduct?.sell_price * infoToSell.count;
+
+                  setInfoToSell({
+                    ...infoToSell,
+                    sellPrice: newTotalPrice,
+                  });
+
+                  // Update discount based on new total price
+                  if (newTotalPrice < calculatedTotal) {
+                    const newDiscount = calculatedTotal - newTotalPrice;
+                    setDiscountPrice(newDiscount);
+                  } else {
+                    setDiscountPrice(0);
+                  }
+                }}
+              />
+
+              <span className="text-sm">{currProduct?.price_unit}</span>
             </div>
           </div>
 

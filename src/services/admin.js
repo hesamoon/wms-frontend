@@ -31,15 +31,24 @@ const sellProduct = (data) => api.post("/sellProduct", { ...data });
 
 const getUser = (data) => api.post("/login", { ...data });
 
+// Category APIs
+const getCategories = () => api.get("/getCategories");
+
+const getCategory = (id) => api.get(`/getCategory/${id}`);
+
+const updateCategory = (data) => api.post("/updateCategory", { ...data });
+
+const removeCategory = (data) => api.post("/removeCategory", { ...data });
+
+const createCategory = (data) => api.post("/createCategory", { ...data });
+
 export {
   getUsers,
   getProduct,
   getProducts,
   getSoldProducts,
   getUser,
-  getBuyers,
   sellProduct,
-  createProduct,
   updateProduct,
   removeProduct,
   updatePaymentDetails,
@@ -47,4 +56,11 @@ export {
   addBuyer,
   updateUser,
   removeUser,
+  createProduct,
+  getBuyers,
+  getCategories,
+  getCategory,
+  updateCategory,
+  removeCategory,
+  createCategory,
 };

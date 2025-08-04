@@ -16,12 +16,26 @@ import Loader from "../components/modules/Loader.jsx";
 import { sp } from "../utils/numbers.js";
 import { userAttr } from "../utils/userAttr.js";
 
-// constant
-import { categories } from "../constant/data.jsx";
+// hooks
+import { useCategories } from "../hooks/useCategories.js";
+
+// components
 import SelectOption from "../components/SelectOption.jsx";
+import AddCategoryModal from "../components/modals/AddCategoryModal.jsx";
 
 function AddProduct() {
   const queryClient = useQueryClient();
+
+  // Categories hook
+  const {
+    categories,
+    categoriesLoading,
+    createCategoryMutate,
+    createCategoryPending,
+  } = useCategories();
+
+  // Modal state
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
 
   // POST
   const { mutate: createProductMutate, isPending: createProductPending } =
@@ -85,7 +99,10 @@ function AddProduct() {
       warehouseCode: "IR2025",
       productCode: product.pCode,
       productName: product.pName,
-      productCategory: product.pCategory,
+      productCategory: {
+        code: product.pCategory.code,
+        name: product.pCategory.name,
+      },
       productUnit: product.pUnit,
       priceUnit: product.priceUnit.name,
       minQty: product.pMinCount,
@@ -99,6 +116,16 @@ function AddProduct() {
       },
     };
     createProductMutate(newProduct);
+  };
+
+  const handleAddCategory = (categoryData) => {
+    createCategoryMutate(categoryData, {
+      onSuccess: (newCategory) => {
+        // Auto-select the newly added category
+        setProduct({ ...product, pCategory: newCategory.data });
+        setShowAddCategoryModal(false);
+      },
+    });
   };
 
   // handle click outside
@@ -146,7 +173,7 @@ function AddProduct() {
               />
               <div className="w-[0.09rem] h-4 bg-[#5F5F5F]" />
               <button
-                className="text-secondary text-sm"
+                className="text-secondary text-sm whitespace-nowrap"
                 onClick={() =>
                   setProduct({ ...product, pCode: genRandonCode() })
                 }
@@ -158,7 +185,17 @@ function AddProduct() {
 
           {/* categories */}
           <div className="space-y-2">
-            <label className="text-secondary">انتخاب دسته</label>
+            <div className="flex items-center justify-between w-72">
+              <label className="text-secondary">انتخاب دسته</label>
+
+              <button
+                onClick={() => setShowAddCategoryModal(true)}
+                className="text-secondary text-sm hover:text-primary transition-colors"
+              >
+                + افزودن دسته جدید
+              </button>
+            </div>
+
             <div className="relative w-fit" ref={ref}>
               <div
                 className="flex items-center justify-between w-72 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
@@ -181,25 +218,41 @@ function AddProduct() {
               </div>
 
               {openCategoriesList && (
-                <div className="z-[999] absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar">
-                  {categories.map((category, index) => (
-                    <p
-                      className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
-                        index === categories.length - 1 ? "rounded-b-lg" : null
-                      } ${
-                        product.pCategory?.code === category.code
-                          ? "bg-hover_primary text-primary font-bold"
-                          : "text-secondary"
-                      }`}
-                      key={category.code}
-                      onClick={() => {
-                        setProduct({ ...product, pCategory: { ...category } });
-                        setOpenCategoriesList(false);
-                      }}
-                    >
-                      {category.name}
-                    </p>
-                  ))}
+                <div className="z-[999] absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar shadow-md">
+                  {categoriesLoading ? (
+                    <div className="p-4 text-center text-secondary">
+                      <Loader />
+                      <p className="mt-2">در حال بارگذاری...</p>
+                    </div>
+                  ) : categories.data.length === 0 ? (
+                    <div className="p-4 text-center text-secondary">
+                      <p>دسته بندی‌ای موجود نیست</p>
+                    </div>
+                  ) : (
+                    categories.data.map((category, index) => (
+                      <p
+                        className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
+                          index === categories.length - 1
+                            ? "rounded-b-lg"
+                            : null
+                        } ${
+                          product.pCategory?.code === category.code
+                            ? "bg-hover_primary text-primary font-bold"
+                            : "text-secondary"
+                        }`}
+                        key={category.code}
+                        onClick={() => {
+                          setProduct({
+                            ...product,
+                            pCategory: { ...category },
+                          });
+                          setOpenCategoriesList(false);
+                        }}
+                      >
+                        {category.name}
+                      </p>
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -342,7 +395,7 @@ function AddProduct() {
                   {["عدد", "متر"].map((unit, index) => (
                     <p
                       className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
-                        index === categories.length - 1 ? "rounded-b-lg" : null
+                        index === 1 ? "rounded-b-lg" : null
                       } ${
                         product.pUnit === unit
                           ? "bg-hover_primary text-primary font-bold"
@@ -422,6 +475,15 @@ function AddProduct() {
           </button>
         </div>
       </div>
+
+      {showAddCategoryModal && (
+        <AddCategoryModal
+          isOpen={showAddCategoryModal}
+          onClose={() => setShowAddCategoryModal(false)}
+          onAddCategory={handleAddCategory}
+          isLoading={createCategoryPending}
+        />
+      )}
     </div>
   );
 }

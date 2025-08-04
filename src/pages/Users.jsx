@@ -11,6 +11,9 @@ import Loader from "../components/modules/Loader";
 // services
 import { addUser, getUsers, removeUser, updateUser } from "../services/admin";
 
+// utils
+import { e2p } from "../utils/numbers";
+
 function Users() {
   const queryClient = useQueryClient();
 
@@ -163,16 +166,16 @@ function Users() {
                   <td
                     className={`text-secondary font-semibold text-center py-2 px-6`}
                   >
-                    {index + 1}
+                    {e2p(index + 1)}
                   </td>
                   <td className={`text-secondary font-semibold py-2 px-6`}>
                     {user.name}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {user.number}
+                    {e2p(user.number)}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {user.password}
+                    {e2p(user.password)}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
                     {user.user_code}

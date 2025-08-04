@@ -229,7 +229,7 @@ function SoldProductsPage() {
                 className="w-48 bg-bg_input py-1 text-secondary outline-none font-bold rounded-lg text-center"
                 onClick={() => setOpenDatePicker({ for: 0, status: true })}
               >
-                <p>{format(startDate, "yyyy/MM/dd")}</p>
+                <p>{new Date(startDate).toLocaleDateString("fa-IR")}</p>
               </button>
               <span className="text-sm text-secondary">تا</span>
               {/* until */}
@@ -237,7 +237,7 @@ function SoldProductsPage() {
                 className="w-48 bg-bg_input py-1 text-secondary outline-none font-bold rounded-lg text-center"
                 onClick={() => setOpenDatePicker({ for: 1, status: true })}
               >
-                <p>{format(endDate, "yyyy/MM/dd")}</p>
+                <p>{new Date(endDate).toLocaleDateString("fa-IR")}</p>
               </button>
               <Dialog
                 open={openDatePicker.status}

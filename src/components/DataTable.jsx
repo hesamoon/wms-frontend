@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 // utils
-import { sp } from "../utils/numbers";
+import { sp, e2p } from "../utils/numbers";
 
 // components
 import RoleBased from "./RoleBased";
@@ -57,7 +57,7 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
               <td
                 className={`text-secondary font-semibold text-center py-2 px-6`}
               >
-                {index + 1}
+                {e2p(index + 1)}
               </td>
               <RoleBased>
                 <td className={`text-secondary font-semibold py-2 px-6`}>
@@ -86,7 +86,7 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
                   p.count === 0 ? "text-warning_hover" : "text-secondary"
                 }`}
               >
-                {p.count}
+                {sp(p.count)}
               </td>
               <td
                 className={`${
@@ -104,7 +104,7 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
               )}
               {isSellList ? (
                 <td className={`text-secondary font-semibold py-2 px-6`}>
-                  {sp(p.count * p.sell_price - p.paymentDetails?.discountPrice)}
+                  {sp(p.sold_price)}
                   <span className="text-xs pr-1">{p.price_unit}</span>
                 </td>
               ) : (
