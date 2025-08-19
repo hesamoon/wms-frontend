@@ -115,7 +115,7 @@ function Users() {
       </div>
 
       {/* data list */}
-      <div className="bg-bg_main rounded-xl max-h-[15rem] overflow-auto">
+      <div className="bg-bg_main rounded-xl max-h-[30rem] overflow-auto">
         {usersLoading ? (
           <Loader />
         ) : usersData?.data.length > 0 ? (
