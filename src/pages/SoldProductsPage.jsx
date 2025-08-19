@@ -82,7 +82,7 @@ function SoldProductsPage() {
       endDate.toISOString()
     );
     setSoldProducts(
-      userAttr().role === "ADMIN"
+      userAttr().role === "SUPER ADMIN"
         ? filteredProducts
         : filteredProducts.filter(
             (sp) => sp.seller.user_code === userAttr().user_code
@@ -93,7 +93,7 @@ function SoldProductsPage() {
   // update data base on selected seller
   useEffect(() => {
     if (soldProductsData?.data.length > 0) {
-      userAttr().role === "ADMIN"
+      userAttr().role === "SUPER ADMIN"
         ? selSeller?.id === "all"
           ? setSoldProducts(soldProductsData.data)
           : setSoldProducts(
@@ -112,7 +112,7 @@ function SoldProductsPage() {
   // set sold products after it ready
   useEffect(() => {
     if (soldProductsData?.data)
-      userAttr().role === "ADMIN"
+      userAttr().role === "SUPER ADMIN"
         ? setSoldProducts(soldProductsData.data)
         : setSoldProducts(
             soldProductsData.data.filter(
