@@ -164,7 +164,7 @@ function SoldProductsPage() {
         </h2>
 
         <div className="space-y-2 bg-bg_main rounded-xl p-4">
-          {userAttr().role === "ADMIN" && (
+          {userAttr().role === "SUPER ADMIN" && (
             <h3 className="font-bold text-lg text-label_text">فروشندگان</h3>
           )}
           <div className="flex justify-between items-center">
