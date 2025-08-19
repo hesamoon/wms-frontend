@@ -4,6 +4,9 @@ const getProducts = () => api.get("/getProducts");
 
 const getProduct = (id) => api.get(`/getProduct/${id}`);
 
+const getProductsByCategory = (categoryCode) =>
+  api.get(`/getProductsByCategory/${categoryCode}`);
+
 const getSoldProducts = () => api.get("/getSoldProducts");
 
 const getUsers = () => api.get("/getUsers");
@@ -42,11 +45,23 @@ const removeCategory = (data) => api.post("/removeCategory", { ...data });
 
 const createCategory = (data) => api.post("/createCategory", { ...data });
 
+// Tower APIs
+const getTowers = () => api.get("/getTowers");
+
+const getTower = (id) => api.get(`/getTower/${id}`);
+
+const updateTower = (data) => api.post("/updateTower", { ...data });
+
+const removeTower = (data) => api.post("/removeTower", { ...data });
+
+const createTower = (data) => api.post("/createTower", { ...data });
+
 export {
   getUsers,
   getProduct,
   getProducts,
   getSoldProducts,
+  getProductsByCategory,
   getUser,
   sellProduct,
   updateProduct,
@@ -63,4 +78,9 @@ export {
   updateCategory,
   removeCategory,
   createCategory,
+  getTowers,
+  getTower,
+  updateTower,
+  removeTower,
+  createTower,
 };

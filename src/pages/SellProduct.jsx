@@ -10,6 +10,7 @@ import { userAttr } from "../utils/userAttr.js";
 // components
 import RoleBased from "../components/RoleBased.jsx";
 import SelectOption from "../components/SelectOption.jsx";
+import AddBuyerModal from "../components/modals/AddBuyerModal.jsx";
 // modules
 import Loader from "../components/modules/Loader.jsx";
 
@@ -17,17 +18,30 @@ import Loader from "../components/modules/Loader.jsx";
 import {
   addBuyer,
   getBuyers,
-  getProducts,
+  getProductsByCategory,
   sellProduct,
 } from "../services/admin.js";
+
+// validation
+import { sellSchema } from "../validationSchemas/productSchema.js";
+
+// hooks
+import { useCategories } from "../hooks/useCategories.js";
+import SelectionList from "../components/SelectionList.jsx";
 
 function SellProduct() {
   const queryClient = useQueryClient();
 
+  // Categories hook
+  const { categories, categoriesLoading } = useCategories();
+
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   // GET
   const { data: productsData, isLoading: productsLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: getProducts,
+    queryKey: ["products", selectedCategory?.code],
+    queryFn: () => getProductsByCategory(selectedCategory?.code),
+    enabled: !!selectedCategory?.code,
   });
   const { data: buyersData, isLoading: buyersLoading } = useQuery({
     queryKey: ["buyers"],
@@ -40,10 +54,10 @@ function SellProduct() {
       mutationFn: sellProduct,
       onSuccess: (data) => {
         console.log(data);
-        queryClient.invalidateQueries("sold-products");
-        queryClient.invalidateQueries("products");
+        queryClient.invalidateQueries(["sold-products", "products"]);
+        // queryClient.invalidateQueries(["products"]);
         toast.success(
-          `${infoToSell.count} عدد از محصول ${currProduct.product_name} فروخته شد.`
+          `${infoToSell.count} ${currProduct.product_unit} از ${currProduct.product_name} فروخته شد.`
         );
         setCurrProduct(null);
         setInfoToSell({
@@ -58,7 +72,7 @@ function SellProduct() {
         setNewUser(null);
         setSelectedCustomer(null);
       },
-      onError: (err) => {
+      onError: () => {
         toast.error("مشکلی در ثبت فروش کالا وجود دارد، دوباره امتحان کنید!");
       },
     });
@@ -66,9 +80,12 @@ function SellProduct() {
     mutationFn: addBuyer,
     onSuccess: (data) => {
       console.log(data);
+      queryClient.invalidateQueries(["buyers"]);
+      toast.success("اطلاعات مشتری با موفقیت ثبت گردید.");
     },
     onError: (err) => {
       console.log(err);
+      toast.error("مشکلی در ثبت اطلاعات مشتری رخ داده است.");
     },
   });
 
@@ -84,8 +101,46 @@ function SellProduct() {
     count: "",
   });
   const [newUser, setNewUser] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [isAddBuyerModalOpen, setIsAddBuyerModalOpen] = useState(false);
+
+  const validateForm = () => {
+    try {
+      sellSchema.parse({
+        selectedCategory,
+        currProduct,
+        discountPrice,
+        selectedCustomer,
+        newUser,
+        payMethod,
+        confirmerCode,
+        settlement,
+        desc,
+      });
+      setErrors({});
+      return true;
+    } catch (error) {
+      console.log(error);
+      const newErrors = {};
+      const issues = error.errors || error.issues || [];
+      issues.forEach((err) => {
+        const key =
+          Array.isArray(err.path) && err.path.length
+            ? err.path.join(".")
+            : "form";
+        newErrors[key] = err.message;
+      });
+      setErrors(newErrors);
+      return false;
+    }
+  };
 
   const sellClickHandler = () => {
+    if (!validateForm()) {
+      toast.error("لطفاً خطاهای فرم را برطرف کنید");
+      return;
+    }
+
     sellProductMutate({
       ...currProduct,
       seller: {
@@ -94,10 +149,18 @@ function SellProduct() {
         user_code: userAttr().user_code,
       },
       buyer: {
-        name: selectedCustomer ? selectedCustomer.name : newUser?.name,
-        number: selectedCustomer ? selectedCustomer.number : newUser?.number,
-        address: selectedCustomer ? selectedCustomer.address : newUser?.address,
-        type: selectedCustomer ? selectedCustomer.type : newUser?.type,
+        name: selectedCustomer
+          ? selectedCustomer.name || ""
+          : newUser?.name || "",
+        number: selectedCustomer
+          ? selectedCustomer.number || ""
+          : newUser?.number || "",
+        address: selectedCustomer
+          ? selectedCustomer.address || ""
+          : newUser?.address || "",
+        type: selectedCustomer
+          ? selectedCustomer.type || ""
+          : newUser?.type || "",
       },
       count: `${infoToSell.count}`,
       soldPrice: `${infoToSell.sellPrice}`,
@@ -111,6 +174,11 @@ function SellProduct() {
     });
   };
 
+  const handleAddBuyer = (buyerData) => {
+    addBuyerMutate(buyerData);
+    setIsAddBuyerModalOpen(false);
+  };
+
   useEffect(() => {
     setInfoToSell({
       sellPrice: currProduct?.sell_price,
@@ -121,6 +189,8 @@ function SellProduct() {
   useEffect(() => {
     setDiscountPrice(0);
   }, [infoToSell.count]);
+
+  useEffect(() => setCurrProduct(null), [selectedCategory]);
 
   return (
     <div className={`flex flex-col gap-6 p-8 w-full`}>
@@ -136,25 +206,60 @@ function SellProduct() {
         <div className="flex gap-4 justify-between">
           {/* product info */}
           <div className="space-y-10">
-            {/* products names */}
-            {productsLoading ? (
-              <Loader />
-            ) : (
-              <SelectOption
-                title="لیست کالاها"
-                options={productsData?.data.filter(
-                  (product) => product.count > 0
-                )}
-                selectedOption={currProduct}
-                setSelectedOption={(option) => {
-                  setCurrProduct(option);
-                  setInfoToSell({
-                    sellPrice: "",
-                    count: "",
-                    buyerInfo: null,
-                  });
-                }}
+            {/* categories */}
+            <div className="space-y-2">
+              <SelectionList
+                title="انتخاب دسته"
+                isLoadingList={categoriesLoading}
+                list={categories?.data}
+                selectedItem={selectedCategory}
+                setSelectedItem={(item) => setSelectedCategory(item)}
+                addNewItemOption={false}
               />
+              {errors.selectedCategory && (
+                <p className="text-red-500 text-sm">
+                  {errors.selectedCategory}
+                </p>
+              )}
+            </div>
+
+            {/* products names */}
+            {selectedCategory ? (
+              // products names
+              productsLoading ? (
+                <Loader />
+              ) : (
+                <div className="space-y-2">
+                  <SelectOption
+                    title="لیست کالاها"
+                    options={productsData?.data.filter(
+                      (product) => product.count > 0
+                    )}
+                    selectedOption={currProduct}
+                    setSelectedOption={(option) => {
+                      setCurrProduct(option);
+                      setInfoToSell({
+                        sellPrice: "",
+                        count: "",
+                        buyerInfo: null,
+                      });
+                    }}
+                  />
+
+                  {errors.currProduct && (
+                    <p className="text-red-500 text-sm">{errors.currProduct}</p>
+                  )}
+                </div>
+              )
+            ) : (
+              <div className="space-y-1 w-72">
+                <label className="text-label_text">لیست کالاها</label>
+                <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                  <h2 className="bg-transparent w-full text-secondary/75 border-none outline-none text-center">
+                    دسته مورد نظر را انتخاب کنید
+                  </h2>
+                </div>
+              </div>
             )}
 
             {/* product details */}
@@ -233,37 +338,43 @@ function SellProduct() {
           <div className="space-y-4">
             <label className="text-secondary">مشخصات خریدار</label>
 
-            {/* custumers */}
-            {buyersLoading ? (
-              <Loader />
-            ) : (
-              <SelectOption
+            {/* customers */}
+            <div className="space-y-2">
+              <SelectionList
                 title="مشتریان"
-                options={buyersData?.data}
-                selectedOption={selectedCustomer}
-                setSelectedOption={(option) => {
-                  setSelectedCustomer(option);
+                addNewItemTitle="افزودن مشتری جدید"
+                isLoadingList={buyersLoading}
+                list={buyersData?.data}
+                selectedItem={selectedCustomer}
+                setAddNewItem={setIsAddBuyerModalOpen}
+                setSelectedItem={(item) => {
+                  setSelectedCustomer(item);
                   setNewUser(null);
                 }}
               />
-            )}
+              {errors.selectedCustomer && (
+                <p className="text-red-500 text-sm">
+                  {errors.selectedCustomer}
+                </p>
+              )}
+            </div>
 
             {/* customer type */}
             <div className="space-y-1 w-72">
-              <label className="text-label_text">نوع مشتری</label>
+              <label className="text-label_text">نوع مشتری *</label>
               <div className="flex items-center justify-between bg-bg_input py-2 px-4 rounded-lg">
                 <div className="flex items-center gap-1">
                   <input
                     type="radio"
                     name="type"
                     value="شخص حقیقی"
-                    onClick={() =>
+                    onChange={() =>
                       setNewUser({ ...newUser, type: "شخص حقیقی" })
                     }
                     checked={
                       selectedCustomer
                         ? selectedCustomer?.type === "شخص حقیقی"
-                        : null
+                        : newUser?.type === "شخص حقیقی"
                     }
                   />
                   <label>شخص حقیقی</label>
@@ -274,23 +385,26 @@ function SellProduct() {
                     type="radio"
                     name="type"
                     value="شخص حقوقی"
-                    onClick={() =>
+                    onChange={() =>
                       setNewUser({ ...newUser, type: "شخص حقوقی" })
                     }
                     checked={
                       selectedCustomer
                         ? selectedCustomer?.type === "شخص حقوقی"
-                        : null
+                        : newUser?.type === "شخص حقوقی"
                     }
                   />
                   <label>شخص حقوقی</label>
                 </div>
               </div>
+              {errors["newUser.type"] && !selectedCustomer && (
+                <p className="text-red-500 text-sm">{errors["newUser.type"]}</p>
+              )}
             </div>
 
             {/* name */}
             <div className="space-y-1 w-72">
-              <label className="text-label_text">نام</label>
+              <label className="text-label_text">نام *</label>
               <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
                 <input
                   className="bg-transparent w-full border-none outline-none text-start remove-arrow"
@@ -308,11 +422,14 @@ function SellProduct() {
                   }
                 />
               </div>
+              {errors["newUser.name"] && !selectedCustomer && (
+                <p className="text-red-500 text-sm">{errors["newUser.name"]}</p>
+              )}
             </div>
 
             {/* number */}
             <div className="space-y-1 w-72">
-              <label className="text-label_text">تلفن</label>
+              <label className="text-label_text">تلفن *</label>
               <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
                 <input
                   className="bg-transparent w-full border-none outline-none text-start remove-arrow"
@@ -330,6 +447,11 @@ function SellProduct() {
                   }
                 />
               </div>
+              {errors["newUser.number"] && !selectedCustomer && (
+                <p className="text-red-500 text-sm">
+                  {errors["newUser.number"]}
+                </p>
+              )}
             </div>
 
             {/* address */}
@@ -353,27 +475,6 @@ function SellProduct() {
                 />
               </div>
             </div>
-
-            {/* add new buyer */}
-            {newUser ? (
-              <button
-                className={`bg-secondary rounded-lg font-bold gap-4 py-2 px-4 text-white text-base flex items-center justify-center ${
-                  addBuyerPending ? "opacity-75" : null
-                }`}
-                disabled={addBuyerPending}
-                onClick={() =>
-                  addBuyerMutate({
-                    name: newUser.name,
-                    number: newUser.number,
-                    address: newUser.address,
-                    type: newUser.type,
-                  })
-                }
-              >
-                ثبت مشخصات خریدار
-                {addBuyerPending && <Loader />}
-              </button>
-            ) : null}
           </div>
 
           {/* payments details */}
@@ -381,19 +482,24 @@ function SellProduct() {
             <label className="text-secondary">اطلاعات پرداخت</label>
 
             {/* payment method */}
-            <SelectOption
-              title="نوع پرداخت"
-              options={[
-                { id: 1, name: "انتقال به کارت" },
-                { id: 2, name: "پوز" },
-                { id: 3, name: "نقد" },
-              ]}
-              selectedOption={payMethod}
-              setSelectedOption={(option) => {
-                setPayMethod(option);
-                setConfirmerCode(null);
-              }}
-            />
+            <div className="space-y-2">
+              <SelectOption
+                title="نوع پرداخت"
+                options={[
+                  { id: 1, name: "انتقال به کارت" },
+                  { id: 2, name: "پوز" },
+                  { id: 3, name: "نقد" },
+                ]}
+                selectedOption={payMethod}
+                setSelectedOption={(option) => {
+                  setPayMethod(option);
+                  setConfirmerCode(null);
+                }}
+              />
+              {errors.payMethod && (
+                <p className="text-red-500 text-sm">{errors.payMethod}</p>
+              )}
+            </div>
 
             {/* payment confirmer */}
             {payMethod && payMethod?.name !== "نقد" ? (
@@ -424,6 +530,9 @@ function SellProduct() {
                     }
                   />
                 </div>
+                {errors.confirmerCode && (
+                  <p className="text-red-500 text-sm">{errors.confirmerCode}</p>
+                )}
               </div>
             ) : null}
 
@@ -438,7 +547,7 @@ function SellProduct() {
                     type="radio"
                     name="settlement"
                     value="بلی"
-                    onClick={() => setSettlement("بلی")}
+                    onChange={() => setSettlement("بلی")}
                     checked={settlement === "بلی"}
                   />
                   <label>بلی</label>
@@ -449,7 +558,7 @@ function SellProduct() {
                     type="radio"
                     name="settlement"
                     value="خیر"
-                    onClick={() => setSettlement("خیر")}
+                    onChange={() => setSettlement("خیر")}
                     checked={settlement === "خیر"}
                   />
                   <label>خیر</label>
@@ -521,23 +630,46 @@ function SellProduct() {
         <div className="flex items-center gap-4 justify-end">
           {/* product count */}
           <div className="flex items-center gap-2 w-fit">
-            <label className="text-label_text">تعداد</label>
-            <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
-              <input
-                className="bg-transparent w-20 border-none outline-none text-center"
-                type="number"
-                disabled={!currProduct?.count}
-                value={infoToSell.count}
-                placeholder={1}
-                onChange={(e) =>
-                  e.target.value >= 1 && e.target.value <= currProduct?.count
-                    ? setInfoToSell({
-                        sellPrice: e.target.value * currProduct?.sell_price,
-                        count: e.target.value,
-                      })
-                    : null
-                }
-              />
+            <label className="text-label_text">
+              {currProduct?.product_unit === "متر" ? "متراژ" : "تعداد"}
+            </label>
+            <div>
+              {currProduct ? (
+                <div className="flex items-center justify-between text-xs">
+                  <label className="text-label_text">موجودی:</label>
+
+                  <span
+                    className={`font-bold ${
+                      currProduct.count > currProduct.min_count
+                        ? "text-confirm"
+                        : "text-warning"
+                    }`}
+                  >
+                    {sp(currProduct.count)} {currProduct.product_unit}
+                  </span>
+                </div>
+              ) : null}
+
+              <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                <input
+                  className="bg-transparent w-20 border-none outline-none text-center"
+                  type="number"
+                  disabled={!currProduct?.count}
+                  value={infoToSell.count}
+                  placeholder={1}
+                  onChange={(e) =>
+                    e.target.value >= 1 && e.target.value <= currProduct?.count
+                      ? setInfoToSell({
+                          sellPrice: e.target.value * currProduct?.sell_price,
+                          count: e.target.value,
+                        })
+                      : null
+                  }
+                />
+              </div>
+              {/* {errors.infoToSell && (
+                <p className="text-red-500 text-sm">{errors.infoToSell}</p>
+              )} */}
             </div>
           </div>
 
@@ -586,23 +718,19 @@ function SellProduct() {
 
               <span className="text-sm">{currProduct?.price_unit}</span>
             </div>
+            {/* {errors.discountPrice && (
+              <p className="text-red-500 text-sm">{errors.discountPrice}</p>
+            )} */}
           </div>
 
           <button
-            className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 ${
-              sellProductPending ||
-              !currProduct ||
-              (!newUser && !selectedCustomer) ||
-              !payMethod
-                ? "opacity-75"
-                : null
-            }`}
-            disabled={
-              sellProductPending ||
-              !currProduct ||
-              (!newUser && !selectedCustomer) ||
-              !payMethod
-            }
+            className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4`}
+            // disabled={
+            //   sellProductPending ||
+            //   !currProduct ||
+            //   (!newUser && !selectedCustomer) ||
+            //   !payMethod
+            // }
             onClick={sellClickHandler}
           >
             ثبت
@@ -610,6 +738,14 @@ function SellProduct() {
           </button>
         </div>
       </div>
+
+      {/* Add Buyer Modal */}
+      <AddBuyerModal
+        isOpen={isAddBuyerModalOpen}
+        onClose={() => setIsAddBuyerModalOpen(false)}
+        onAddBuyer={handleAddBuyer}
+        isLoading={addBuyerPending}
+      />
     </div>
   );
 }

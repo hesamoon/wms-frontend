@@ -6,26 +6,36 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import RoleBased from "../components/RoleBased.jsx";
 import Loader from "../components/modules/Loader.jsx";
 import SelectOption from "../components/SelectOption.jsx";
+import SelectionList from "../components/SelectionList.jsx";
 
 // services
 import {
-  getProducts,
   updateProduct,
   removeProduct,
+  getProductsByCategory,
 } from "../services/admin.js";
 
 // utilities
 import { sp } from "../utils/numbers";
 import { userAttr } from "../utils/userAttr.js";
 
+// hooks
+import { useCategories } from "../hooks/useCategories.js";
+
 /* eslint-disable react/prop-types */
 function UpdateProduct() {
   const queryClient = useQueryClient();
 
+  // Categories hook
+  const { categories, categoriesLoading } = useCategories();
+
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   // GET
   const { data: productsData, isLoading: productsLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: getProducts,
+    queryKey: ["products", selectedCategory?.code],
+    queryFn: () => getProductsByCategory(selectedCategory?.code),
+    enabled: !!selectedCategory?.code,
   });
 
   // POST
@@ -92,6 +102,8 @@ function UpdateProduct() {
     };
   }, [openProductsList]);
 
+  useEffect(() => setCurrProduct(null), [selectedCategory]);
+
   return (
     <div className={`flex flex-col gap-6 p-8 w-full`}>
       {/* title */}
@@ -110,25 +122,51 @@ function UpdateProduct() {
         )}
 
         <div className={`bg-bg_main rounded-xl p-4 space-y-10`}>
+          {/* categories */}
+          <div className="space-y-2">
+            <SelectionList
+              title="انتخاب دسته"
+              isLoadingList={categoriesLoading}
+              list={categories?.data}
+              selectedItem={selectedCategory}
+              setSelectedItem={(item) => setSelectedCategory(item)}
+              addNewItemOption={false}
+            />
+            {/* {errors.pCategory && (
+            <p className="text-red-500 text-sm">{errors.pCategory}</p>
+          )} */}
+          </div>
+
           {/* products names */}
-          <SelectOption
-            title="لیست کالاها"
-            options={productsData?.data}
-            selectedOption={currProduct}
-            setSelectedOption={setCurrProduct}
-          />
+          {selectedCategory ? (
+            <SelectOption
+              title="لیست کالاها"
+              options={productsData?.data}
+              selectedOption={currProduct}
+              setSelectedOption={setCurrProduct}
+            />
+          ) : (
+            <div className="space-y-1 w-72">
+              <label className="text-label_text">لیست کالاها</label>
+              <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
+                <h2 className="bg-transparent w-full text-secondary/75 border-none outline-none text-center">
+                  دسته مورد نظر را انتخاب کنید
+                </h2>
+              </div>
+            </div>
+          )}
 
           {/* product details */}
           <div className="space-y-4">
             {/* product code */}
-            <div className="space-y-1 w-72">
+            {/* <div className="space-y-1 w-72">
               <label className="text-label_text">کد کالا</label>
               <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
                 <p className="text-center text-secondary w-full h-5">
                   {currProduct?.product_code}
                 </p>
               </div>
-            </div>
+            </div> */}
 
             {/* product name */}
             <div className="space-y-1 w-72">

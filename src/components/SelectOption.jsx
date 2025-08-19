@@ -42,7 +42,15 @@ function SelectOption({
         >
           <span
             className={`text-sm p-1.5 ${
-              selectedOption ? "text-primary font-bold" : "text-secondary"
+              title === "لیست کالاها"
+                ? selectedOption
+                  ? selectedOption.count <= selectedOption.min_count
+                    ? "text-warning font-bold"
+                    : "text-primary font-bold"
+                  : "text-secondary"
+                : selectedOption
+                ? "text-primary font-bold"
+                : "text-secondary"
             }`}
           >
             {selectedOption
@@ -52,6 +60,16 @@ function SelectOption({
                 ? selectedOption.name
                 : selectedOption.product_name
               : "انتخاب کنید"}
+
+            {selectedOption ? (
+              title === "لیست کالاها" ? (
+                selectedOption.count <= selectedOption.min_count ? (
+                  <span className="text-xs">{` (${
+                    selectedOption.product_unit === "عدد" ? "تعداد" : "متراژ"
+                  } محدود)`}</span>
+                ) : null
+              ) : null
+            ) : null}
           </span>
           <img
             className={`${openOption ? "rotate-180" : null}`}
@@ -72,7 +90,11 @@ function SelectOption({
             )}
             {options.map((option, index) => (
               <p
-                className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
+                className={`p-1.5 cursor-pointer ${
+                  title === "لیست کالاها" && option.count <= option.min_count
+                    ? "hover:bg-red-100"
+                    : "hover:bg-hover_primary"
+                } text-sm rtl ${
                   index === options.length - 1 ? "rounded-b-lg" : null
                 } ${
                   title === "مشتریان" ||
@@ -82,7 +104,11 @@ function SelectOption({
                       ? "bg-hover_primary text-primary font-bold"
                       : "text-secondary"
                     : selectedOption?.object_id === option?.object_id
-                    ? "bg-hover_primary text-primary font-bold"
+                    ? selectedOption.count <= selectedOption.min_count
+                      ? "bg-red-100 text-warning font-bold"
+                      : "bg-hover_primary text-primary font-bold"
+                    : option.count <= option.min_count
+                    ? "text-warning"
                     : "text-secondary"
                 }`}
                 key={
@@ -99,6 +125,12 @@ function SelectOption({
                 title === "واحد پول"
                   ? option?.name
                   : option?.product_name}
+
+                {title === "لیست کالاها" && option.count <= option.min_count ? (
+                  <span className="text-xs">{` (${
+                    option.product_unit === "عدد" ? "تعداد" : "متراژ"
+                  } محدود)`}</span>
+                ) : null}
               </p>
             ))}
           </div>

@@ -17,8 +17,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Layout>
         <Router />
-        <Toaster />
       </Layout>
+      <Toaster />
     </QueryClientProvider>
   );
 }

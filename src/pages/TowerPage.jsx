@@ -3,97 +3,102 @@ import toast from "react-hot-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // components
-import UserModal from "../components/modals/UserModal";
+import TowerModal from "../components/modals/TowerModal";
 
 // modules
 import Loader from "../components/modules/Loader";
 
 // services
-import { addUser, getUsers, removeUser, updateUser } from "../services/admin";
+import {
+  createTower,
+  getTowers,
+  removeTower,
+  updateTower,
+} from "../services/admin";
 
 // utils
 import { e2p } from "../utils/numbers";
 
-function Users() {
+function TowerPage() {
   const queryClient = useQueryClient();
 
   // GET
-  const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: ["users"],
-    queryFn: getUsers,
+  const { data: towersData, isLoading: towersLoading } = useQuery({
+    queryKey: ["towers"],
+    queryFn: getTowers,
   });
 
   // POST
-  const { mutate: addUserMutate, isPending: addUserPending } = useMutation({
-    mutationFn: addUser,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries("users");
-      toast.success(`کاربر با نام کاربری ${data.data?.number} ایجاد گردید.`);
-      setIsUserModalOpen(false);
-    },
-    onError: (err) => {
-      console.log(err);
-    },
-  });
-  const { mutate: updateUserMutate, isPending: updateUserPending } =
+  const { mutate: createTowerMutate, isPending: createTowerPending } =
     useMutation({
-      mutationFn: updateUser,
+      mutationFn: createTower,
       onSuccess: (data) => {
-        queryClient.invalidateQueries("users");
-        toast.success(
-          `کاربر با نام کاربری ${data.data?.number} بروزرسانی گردید.`
-        );
-        setIsUserModalOpen(false);
-        setSelectedUserForEdit(null);
+        queryClient.invalidateQueries("towers");
+        toast.success(`دکل جدید ایجاد گردید.`);
+        setIsTowerModalOpen(false);
       },
       onError: (err) => {
         console.log(err);
       },
     });
-  const { mutate: removeUserMutate, isPending: removeUserPending } =
+  const { mutate: updateTowerMutate, isPending: updateTowerPending } =
     useMutation({
-      mutationFn: removeUser,
+      mutationFn: updateTower,
       onSuccess: (data) => {
-        queryClient.invalidateQueries("users");
-        toast.success(`کاربر با شناسه ${data.data?.user_code} حذف گردید.`);
+        queryClient.invalidateQueries("towers");
+        toast.success(`دکل بروزرسانی گردید.`);
+        setIsTowerModalOpen(false);
+        setSelectedTowerForEdit(null);
+      },
+      onError: (err) => {
+        console.log(err);
+      },
+    });
+  const { mutate: removeTowerMutate, isPending: removeTowerPending } =
+    useMutation({
+      mutationFn: removeTower,
+      onSuccess: (data) => {
+        queryClient.invalidateQueries("towers");
+        toast.success(`دکل حذف گردید.`);
       },
       onError: (err) => {
         console.log(err);
       },
     });
 
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isTowerModalOpen, setIsTowerModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("add");
-  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
+  const [selectedTowerForEdit, setSelectedTowerForEdit] = useState(null);
 
-  const handleAddUser = (userData) => {
-    addUserMutate(userData);
+  const handleAddTower = (towerData) => {
+    createTowerMutate(towerData);
   };
 
-  const handleUpdateUser = (userData) => {
-    updateUserMutate(userData);
+  const handleUpdateTower = (towerData) => {
+    console.log(towerData);
+    updateTowerMutate(towerData);
   };
 
   const handleOpenAddModal = () => {
     setModalMode("add");
-    setSelectedUserForEdit(null);
-    setIsUserModalOpen(true);
+    setSelectedTowerForEdit(null);
+    setIsTowerModalOpen(true);
   };
 
-  const handleOpenEditModal = (userData) => {
+  const handleOpenEditModal = (towerData) => {
     setModalMode("update");
-    setSelectedUserForEdit(userData);
-    setIsUserModalOpen(true);
+    setSelectedTowerForEdit(towerData);
+    setIsTowerModalOpen(true);
   };
 
   useEffect(() => {
-    if (isUserModalOpen) {
+    if (isTowerModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
     return () => (document.body.style.overflow = "auto");
-  }, [isUserModalOpen]);
+  }, [isTowerModalOpen]);
 
   return (
     <div className={`flex flex-col gap-6 p-8 w-full`}>
@@ -102,7 +107,7 @@ function Users() {
         <h2
           className={`font-bold text-2xl transition-transform duration-300 ease-in-out text-secondary`}
         >
-          کاربران
+          لیست دکل ها
         </h2>
 
         {/* add user button */}
@@ -110,15 +115,15 @@ function Users() {
           onClick={handleOpenAddModal}
           className="bg-secondary rounded-lg px-6 py-3 font-bold text-white text-base hover:bg-secondary/90 transition-colors"
         >
-          افزودن کاربر جدید
+          افزودن دکل جدید
         </button>
       </div>
 
       {/* data list */}
       <div className="bg-bg_main rounded-xl max-h-[15rem] overflow-auto">
-        {usersLoading ? (
+        {towersLoading ? (
           <Loader />
-        ) : usersData?.data.length > 0 ? (
+        ) : towersData?.data.length > 0 ? (
           <table className="w-full relative">
             <thead className="shadow-md shadow-hover_primary sticky top-0 bg-bg_main">
               <tr>
@@ -127,46 +132,34 @@ function Users() {
                 </th>
                 <th className="text-secondary py-2 px-6 text-start">نام</th>
                 <th className="text-secondary py-2 px-6 text-start">
-                  نام کاربری
+                  ارتفاع<span className="text-xs"> (متر)</span>
                 </th>
                 <th className="text-secondary py-2 px-6 text-start">
-                  رمز عبور
-                </th>
-                <th className="text-secondary py-2 px-6 text-start">
-                  شناسه کاربر
-                </th>
-                <th className="text-secondary py-2 px-6 text-start">
-                  نقش کاربر
+                  تاریخ ثبت
                 </th>
                 <th className="text-secondary py-2 px-6 text-start">عملیات</th>
               </tr>
             </thead>
             <tbody>
-              {usersData?.data.map((user, index) => (
-                <tr key={user.object_id}>
+              {towersData?.data.map((tower, index) => (
+                <tr key={tower.object_id}>
                   <td
                     className={`text-secondary font-semibold text-center py-2 px-6`}
                   >
                     {e2p(index + 1)}
                   </td>
                   <td className={`text-secondary font-semibold py-2 px-6`}>
-                    {user.name}
+                    {tower.name}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {e2p(user.number)}
+                    {e2p(+tower.size)}
                   </td>
                   <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {e2p(user.password)}
-                  </td>
-                  <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {user.user_code}
-                  </td>
-                  <td className={`font-semibold py-2 px-6 text-secondary`}>
-                    {user.role}
+                    {new Date(tower.createAt).toLocaleDateString("fa-IR")}
                   </td>
                   <td className={`font-semibold py-2 px-6`}>
                     {/* update btn */}
-                    <button onClick={() => handleOpenEditModal(user)}>
+                    <button onClick={() => handleOpenEditModal(tower)}>
                       <svg
                         width="24"
                         height="24"
@@ -189,7 +182,7 @@ function Users() {
                     {/* remove btn */}
                     <button
                       className="mr-2"
-                      onClick={() => removeUserMutate({ ...user })}
+                      onClick={() => removeTowerMutate({ ...tower })}
                     >
                       <svg
                         width="24"
@@ -231,23 +224,23 @@ function Users() {
           </table>
         ) : (
           <h1 className="text-center font-bold text-secondary py-4">
-            کاربری وجود ندارد.
+            دکلی وجود ندارد.
           </h1>
         )}
       </div>
 
-      {/* User Modal */}
-      <UserModal
-        isOpen={isUserModalOpen}
-        onClose={() => setIsUserModalOpen(false)}
-        onAddUser={handleAddUser}
-        onUpdateUser={handleUpdateUser}
-        isLoading={addUserPending || updateUserPending}
-        userData={selectedUserForEdit}
+      {/* Tower Modal */}
+      <TowerModal
+        isOpen={isTowerModalOpen}
+        onClose={() => setIsTowerModalOpen(false)}
+        onAddTower={handleAddTower}
+        onUpdateTower={handleUpdateTower}
+        isLoading={createTowerPending || updateTowerPending}
+        towerData={selectedTowerForEdit}
         mode={modalMode}
       />
     </div>
   );
 }
 
-export default Users;
+export default TowerPage;

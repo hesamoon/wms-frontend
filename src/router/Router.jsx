@@ -7,6 +7,7 @@ import PageNotFound from "../pages/404";
 import LoginPage from "../pages/LoginPage";
 import AddProduct from "../pages/AddProduct";
 import SellProduct from "../pages/SellProduct";
+import TowerPage from "../pages/TowerPage.jsx";
 import ProductsPage from "../pages/ProductsPage";
 import UpdateProduct from "../pages/UpdateProduct";
 import SoldProductsPage from "../pages/SoldProductsPage";
@@ -39,7 +40,22 @@ function Router() {
       <Route path="/sell-product" element={<SellProduct />} />
       <Route path="/update-product" element={<UpdateProduct />} />
       <Route path="/profit" element={<Profit />} />
-      <Route path="/users" element={<Users />} />
+      <Route
+        path="/users"
+        element={
+          userAttr().role !== "SUPER ADMIN" ? <Navigate to="/" /> : <Users />
+        }
+      />
+      <Route
+        path="/tower"
+        element={
+          userAttr().role !== "SUPER ADMIN" ? (
+            <Navigate to="/" />
+          ) : (
+            <TowerPage />
+          )
+        }
+      />
       <Route path="/*" element={<PageNotFound />} />
     </Routes>
   );

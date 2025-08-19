@@ -21,7 +21,11 @@ import { useCategories } from "../hooks/useCategories.js";
 
 // components
 import SelectOption from "../components/SelectOption.jsx";
+import SelectionList from "../components/SelectionList.jsx";
 import AddCategoryModal from "../components/modals/AddCategoryModal.jsx";
+
+// validation
+import { addSchema } from "../validationSchemas/productSchema.js";
 
 function AddProduct() {
   const queryClient = useQueryClient();
@@ -36,6 +40,9 @@ function AddProduct() {
 
   // Modal state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+
+  // Validation errors state
+  const [errors, setErrors] = useState({});
 
   // POST
   const { mutate: createProductMutate, isPending: createProductPending } =
@@ -54,8 +61,9 @@ function AddProduct() {
           pUnit: "",
           pMinCount: 0,
           pCount: 0,
-          priceUnit: { id: 1, name: "تومان" },
+          priceUnit: null,
         });
+        setErrors({});
       },
       onError: (err) => {
         console.log(err);
@@ -74,12 +82,11 @@ function AddProduct() {
     pUnit: "",
     pMinCount: 0,
     pCount: 0,
-    priceUnit: { id: 1, name: "تومان" },
+    priceUnit: null,
   });
 
-  const [openCategoriesList, setOpenCategoriesList] = useState(false);
   const [openUnitsList, setOpenUnitsList] = useState(false);
-  const ref = useRef(null);
+
   const ref1 = useRef(null);
 
   function genRandonCode() {
@@ -94,10 +101,37 @@ function AddProduct() {
     return result;
   }
 
+  const validateForm = () => {
+    try {
+      addSchema.parse(product);
+      setErrors({});
+      return true;
+    } catch (error) {
+      const newErrors = {};
+      if (error.errors && Array.isArray(error.errors)) {
+        error.errors.forEach((err) => {
+          newErrors[err.path[0]] = err.message;
+        });
+      } else if (error.issues && Array.isArray(error.issues)) {
+        error.issues.forEach((err) => {
+          newErrors[err.path[0]] = err.message;
+        });
+      }
+      setErrors(newErrors);
+      return false;
+    }
+  };
+
   const addProductClickHandler = () => {
+    if (!validateForm()) {
+      toast.error("لطفاً خطاهای فرم را برطرف کنید");
+      return;
+    }
+
+    const productCode = genRandonCode();
     const newProduct = {
       warehouseCode: "IR2025",
-      productCode: product.pCode,
+      productCode: productCode,
       productName: product.pName,
       productCategory: {
         code: product.pCategory.code,
@@ -131,9 +165,6 @@ function AddProduct() {
   // handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (ref.current && !ref.current.contains(event.target)) {
-        openCategoriesList && setOpenCategoriesList(false);
-      }
       if (ref1.current && !ref1.current.contains(event.target)) {
         openUnitsList && setOpenUnitsList(false);
       }
@@ -142,7 +173,7 @@ function AddProduct() {
     return () => {
       document.removeEventListener("click", handleClickOutside, true);
     };
-  }, [openCategoriesList, openUnitsList]);
+  }, [openUnitsList]);
 
   return (
     <div className={`flex flex-col gap-6 p-8 w-full`}>
@@ -158,7 +189,7 @@ function AddProduct() {
         {/* product details */}
         <div className="space-y-4">
           {/* product code */}
-          <div className="space-y-1 w-72">
+          {/* <div className="space-y-1 w-72">
             <label className="text-label_text">کد کالا</label>
             <div className="flex items-center gap-2 bg-bg_input p-2 rounded-lg">
               <input
@@ -181,81 +212,24 @@ function AddProduct() {
                 تولید خودکار
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* categories */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between w-72">
-              <label className="text-secondary">انتخاب دسته</label>
-
-              <button
-                onClick={() => setShowAddCategoryModal(true)}
-                className="text-secondary text-sm hover:text-primary transition-colors"
-              >
-                + افزودن دسته جدید
-              </button>
-            </div>
-
-            <div className="relative w-fit" ref={ref}>
-              <div
-                className="flex items-center justify-between w-72 bg-bg_input py-1 px-3 rounded-lg cursor-pointer"
-                onClick={() => setOpenCategoriesList((prev) => !prev)}
-              >
-                <span
-                  className={`text-sm p-1.5 ${
-                    product.pCategory
-                      ? "text-primary font-bold"
-                      : "text-secondary"
-                  }`}
-                >
-                  {product.pCategory ? product.pCategory.name : "انتخاب کنید"}
-                </span>
-                <img
-                  className={`${openCategoriesList ? "rotate-180" : null}`}
-                  src={arrowIcon}
-                  alt="arrow"
-                />
-              </div>
-
-              {openCategoriesList && (
-                <div className="z-[999] absolute top-12 bg-bg_input rounded-lg w-72 max-h-52 overflow-auto ltr no-scrollbar shadow-md">
-                  {categoriesLoading ? (
-                    <div className="p-4 text-center text-secondary">
-                      <Loader />
-                      <p className="mt-2">در حال بارگذاری...</p>
-                    </div>
-                  ) : categories.data.length === 0 ? (
-                    <div className="p-4 text-center text-secondary">
-                      <p>دسته بندی‌ای موجود نیست</p>
-                    </div>
-                  ) : (
-                    categories.data.map((category, index) => (
-                      <p
-                        className={`p-1.5 cursor-pointer hover:bg-hover_primary text-sm rtl ${
-                          index === categories.length - 1
-                            ? "rounded-b-lg"
-                            : null
-                        } ${
-                          product.pCategory?.code === category.code
-                            ? "bg-hover_primary text-primary font-bold"
-                            : "text-secondary"
-                        }`}
-                        key={category.code}
-                        onClick={() => {
-                          setProduct({
-                            ...product,
-                            pCategory: { ...category },
-                          });
-                          setOpenCategoriesList(false);
-                        }}
-                      >
-                        {category.name}
-                      </p>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+            <SelectionList
+              title="انتخاب دسته"
+              addNewItemTitle="افزودن دسته جدید"
+              isLoadingList={categoriesLoading}
+              list={categories?.data}
+              selectedItem={product.pCategory}
+              setAddNewItem={setShowAddCategoryModal}
+              setSelectedItem={(item) =>
+                setProduct({ ...product, pCategory: item })
+              }
+            />
+            {errors.pCategory && (
+              <p className="text-red-500 text-sm">{errors.pCategory}</p>
+            )}
           </div>
 
           {/* product name */}
@@ -272,6 +246,9 @@ function AddProduct() {
                 }
               />
             </div>
+            {errors.pName && (
+              <p className="text-red-500 text-sm">{errors.pName}</p>
+            )}
           </div>
 
           {/* available date
@@ -302,19 +279,24 @@ function AddProduct() {
           </div> */}
 
           {/* price unit */}
-          <SelectOption
-            title="واحد پول"
-            options={[
-              { id: 1, name: "تومان" },
-              { id: 2, name: "درهم" },
-              { id: 3, name: "دلار" },
-            ]}
-            selectedOption={product.priceUnit}
-            setSelectedOption={(option) =>
-              setProduct({ ...product, priceUnit: option })
-            }
-            removeUnSelectedOption={true}
-          />
+          <div className="space-y-2">
+            <SelectOption
+              title="واحد پول"
+              options={[
+                { id: 1, name: "تومان" },
+                { id: 2, name: "درهم" },
+                { id: 3, name: "دلار" },
+              ]}
+              selectedOption={product.priceUnit}
+              setSelectedOption={(option) =>
+                setProduct({ ...product, priceUnit: option })
+              }
+              removeUnSelectedOption={true}
+            />
+            {errors.priceUnit && (
+              <p className="text-red-500 text-sm">{errors.priceUnit}</p>
+            )}
+          </div>
 
           {/* product buy price */}
           <div className="space-y-1 w-72">
@@ -337,6 +319,9 @@ function AddProduct() {
                 }
               />
             </div>
+            {errors.pBuyPrice && (
+              <p className="text-red-500 text-sm">{errors.pBuyPrice}</p>
+            )}
           </div>
 
           {/* product sell price */}
@@ -366,6 +351,9 @@ function AddProduct() {
                 }
               />
             </div>
+            {errors.pSellPrice && (
+              <p className="text-red-500 text-sm">{errors.pSellPrice}</p>
+            )}
           </div>
 
           {/* unit */}
@@ -413,6 +401,9 @@ function AddProduct() {
                 </div>
               )}
             </div>
+            {errors.pUnit && (
+              <p className="text-red-500 text-sm">{errors.pUnit}</p>
+            )}
           </div>
 
           {/* count */}
@@ -435,6 +426,9 @@ function AddProduct() {
                   }
                 />
               </div>
+              {errors.pCount && (
+                <p className="text-red-500 text-sm">{errors.pCount}</p>
+              )}
             </div>
 
             {/* product minimum count */}
@@ -455,6 +449,9 @@ function AddProduct() {
                   }
                 />
               </div>
+              {errors.pMinCount && (
+                <p className="text-red-500 text-sm">{errors.pMinCount}</p>
+              )}
             </div>
           </div>
         </div>
@@ -462,12 +459,8 @@ function AddProduct() {
         {/* add product */}
         <div className="flex items-center justify-end">
           <button
-            className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 ${
-              createProductPending || +product.pCount === 0
-                ? "opacity-75"
-                : null
-            }`}
-            disabled={createProductPending || +product.pCount === 0}
+            className={`bg-secondary rounded-lg w-32 h-12 font-bold text-white text-base flex items-center justify-center gap-4 `}
+            // disabled={createProductPending || +product.pCount === 0}
             onClick={addProductClickHandler}
           >
             افزودن

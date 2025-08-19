@@ -17,7 +17,7 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
           <th className="text-secondary py-2 px-6 text-start">دسته کالا</th>
           <th className="text-secondary py-2 px-6 text-start">کد کالا</th>
           <th className="text-secondary py-2 px-6 text-start">نام کالا</th>
-          <th className="text-secondary py-2 px-6 text-start">تعداد</th>
+          <th className="text-secondary py-2 px-6 text-start">مقدار</th>
           <th className="text-secondary py-2 px-6 text-start">
             {isSellList ? "تاریخ فروش" : "تاریخ شارژ"}
           </th>
@@ -53,7 +53,16 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
             );
           })
           .map((p, index) => (
-            <tr key={p.object_id}>
+            <tr
+              key={p.object_id}
+              className={`${
+                !isSellList
+                  ? p.count <= p.min_count
+                    ? "bg-red-100"
+                    : null
+                  : null
+              }`}
+            >
               <td
                 className={`text-secondary font-semibold text-center py-2 px-6`}
               >
@@ -67,26 +76,22 @@ function DataTable({ data, isSellList = false, setEditProduct }) {
               <td className={`text-secondary font-semibold py-2 px-6`}>
                 {p.product_category?.name}
               </td>
-              <td
-                className={`${
-                  p.count === 0 ? "text-warning_hover" : "text-secondary"
-                } font-semibold py-2 px-6`}
-              >
+              <td className={`text-secondary font-semibold py-2 px-6`}>
                 {p.product_code}
               </td>
-              <td
-                className={`${
-                  p.count === 0 ? "text-warning_hover" : "text-secondary"
-                } font-semibold py-2 px-6`}
-              >
+              <td className={`text-secondary font-semibold py-2 px-6`}>
                 {p.product_name}
               </td>
               <td
                 className={`font-semibold py-2 px-6 ${
-                  p.count === 0 ? "text-warning_hover" : "text-secondary"
+                  !isSellList
+                    ? p.count <= p.min_count
+                      ? "text-warning"
+                      : "text-secondary"
+                    : "text-secondary"
                 }`}
               >
-                {sp(p.count)}
+                {sp(p.count)} <span className="text-xs">{p.product_unit}</span>
               </td>
               <td
                 className={`${
