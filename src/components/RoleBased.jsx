@@ -4,7 +4,7 @@ import { userAttr } from "../utils/userAttr";
 function RoleBased({ children }) {
   const user = userAttr();
 
-  return ["SUPER ADMIN"].includes(user?.role) ? children : null;
+  return ["SUPER ADMIN", "ADMIN"].includes(user?.role) ? children : null;
 }
 
 export default RoleBased;
